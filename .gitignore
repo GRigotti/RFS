@@ -1,0 +1,18 @@
+# Ambiente Virtual
+venv/
+.venv/
+env/
+
+# Cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Configurações do VS Code
+.vscode/
+
+# Banco de dados local (Opcional)
+# Se você quiser salvar a estrutura física que está usando para testes, deixe sem a linha abaixo.
+# Se não quiser subir seus dados reais de produção para o GitHub, descomente a linha abaixo:
+# cmms_industrial.db
