@@ -48,7 +48,7 @@ class Colaborador(models.Model):
 
 class Problema(models.Model):
     problema = models.CharField(max_length=100, db_column='problema')
-    
+    descricao = models.CharField(max_length=200, db_column='descricao')
     class Meta:
         managed = False
         db_table = 'problemas'

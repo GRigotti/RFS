@@ -7,4 +7,11 @@ urlpatterns = [
     path('', views.dashboard_view, name='dashboard'),
     path('historico/', views.historico_view, name='historico'),
     path('gerenciamento/', views.gerenciamento_view, name='gerenciamento'),
+    # Endpoints genéricos para salvar/editar (exemplo para duas tabelas, replique para as outras)
+    path('gerenciamento/colaborador/salvar/', views.salvar_colaborador, name='salvar_colaborador'),
+    path('gerenciamento/maquina/salvar/', views.salvar_maquina, name='salvar_maquina'),
+    path('gerenciamento/acao/salvar/', views.salvar_acao, name='salvar_acao'),
+    path('gerenciamento/molde/salvar/', views.salvar_molde, name='salvar_molde'),
+    path('gerenciamento/item-molde/salvar/', views.salvar_item_molde, name='salvar_item_molde'),
+    path('gerenciamento/problema/salvar/', views.salvar_problema, name='salvar_problema'),
 ]

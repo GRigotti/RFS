@@ -1,9 +1,10 @@
 import json
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Count
 from .models import ItemPorMolde, Molde, Maquina, Colaborador, Problema, SolicitacaoManutencao, AcaoManutencao
 from .services import MoldeService, ColaboradorService, SolicitacaoService # Importamos os serviços que criamos
+from django.views.decorators.csrf import csrf_protect
 
 # ==============================================================================
 # 1. TELA DE DASHBOARD
@@ -114,31 +115,192 @@ def historico_view(request):
 # ==============================================================================
 # 3. TELA DE GERENCIAMENTO (CADASTRAR MOLDES, ETC)
 # ==============================================================================
-def gerenciamento_view(request):
-    # SE O USUÁRIO CLICOU NO BOTÃO "SALVAR" (Método POST)
-    if request.method == 'POST':
-        # Descobre qual formulário ele enviou (ex: input hidden com nome 'tipo_form')
-        tipo_form = request.POST.get('tipo_form')
-        
-        if tipo_form == 'novo_molde':
-            nome = request.POST.get('molde_nome')
-            endereco = request.POST.get('endereco_molde')
-            status = request.POST.get('status', 'Operação')
-            
-            # Chama o nosso serviço para fazer a gravação segura!
-            if nome and endereco:
-                MoldeService.adicionar_molde(nome=nome, endereco=endereco, status=status)
-                messages.success(request, f"Molde '{nome}' cadastrado com sucesso!")
-            else:
-                messages.error(request, "Nome e Endereço são obrigatórios.")
-                
-            return redirect('gerenciamento') # Recarrega a página para limpar o formulário
 
-    # SE ELE SÓ ABRIU A PÁGINA (Método GET)
+
+@csrf_protect # ISTO FORÇA O DJANGO A GERAR O TOKEN PARA ESTA TELA
+def gerenciamento_view(request):
     context = {
-        'moldes_cadastrados': Molde.objects.all(),
-        # Aqui mandaremos as listas de itens, colaboradores, etc., para as abas
+        'colaboradores': Colaborador.objects.all().order_by('nome'),
+        'maquinas': Maquina.objects.all().order_by('maquina'), # Ordenado pelo campo correto
+        'acoes': AcaoManutencao.objects.all().order_by('acao'),
+        'moldes': Molde.objects.all().order_by('molde_nome'), # Ordenado pelo campo correto
+        'itens_molde': ItemPorMolde.objects.all().order_by('item_codigo'),
+        'problemas': Problema.objects.all().order_by('problema'),
     }
-    
     return render(request, 'ferramentaria/gerenciamento.html', context)
 
+def salvar_molde(request):
+    if request.method == 'POST':
+        id_reg = request.POST.get('id')
+        molde_nome = request.POST.get('molde_nome', '').strip().upper()
+        endereco_molde = request.POST.get('endereco_molde', '').strip().upper()
+        status = request.POST.get('status', 'Ativo')
+        
+        duplicado = Molde.objects.filter(molde_nome__iexact=molde_nome)
+        if id_reg:
+            duplicado = duplicado.exclude(id=id_reg)
+            
+        if duplicado.exists():
+            messages.error(request, f"Erro: O molde '{molde_nome}' já existe!")
+            return redirect('/gerenciamento/?aba=aba-moldes')
+
+        if id_reg: # Editar Existente
+            obj = get_object_or_404(Molde, id=id_reg)
+            obj.molde_nome = molde_nome
+            obj.endereco_molde = endereco_molde # ADICIONADO
+            obj.status = status                 # ADICIONADO
+            obj.save()
+            messages.success(request, "Molde atualizado com sucesso!")
+        else: # Criar Novo
+            # ADICIONADO OS CAMPOS NO CREATE:
+            Molde.objects.create(
+                molde_nome=molde_nome, 
+                endereco_molde=endereco_molde, 
+                status=status
+            )
+            messages.success(request, "Novo molde cadastrado com sucesso!")
+            
+    return redirect('/gerenciamento/?aba=aba-moldes') # Redireciona para a aba correta do gerenciamento
+
+def salvar_maquina(request):
+    if request.method == 'POST':
+        id_reg = request.POST.get('id')
+        maquina = request.POST.get('maquina', '').strip().upper()
+        grupo_maquina = request.POST.get('grupo_maquina', '').strip().upper()
+        descricao = request.POST.get('descricao', '').strip()
+        status = request.POST.get('status', 'Ativo')
+        
+        duplicado = Maquina.objects.filter(maquina__iexact=maquina)
+        if id_reg:
+            duplicado = duplicado.exclude(id_maquina=id_reg)
+            
+        if duplicado.exists():
+            messages.error(request, f"Erro: A máquina '{maquina}' já existe!")
+            return redirect('/gerenciamento/?aba=aba-maquinas')
+
+        if id_reg:
+            obj = get_object_or_404(Maquina, id_maquina=id_reg)
+            obj.maquina = maquina
+            obj.grupo_maquina = grupo_maquina # ADICIONADO
+            obj.descricao = descricao         # ADICIONADO
+            obj.status = status
+            obj.save()
+        else:
+            # ID omitido propositalmente para o SQLite auto-incrementar
+            Maquina.objects.create(
+                maquina=maquina, 
+                grupo_maquina=grupo_maquina, 
+                descricao=descricao, 
+                status=status
+            )
+            
+        messages.success(request, "Máquina salva com sucesso!")
+    return redirect('/gerenciamento/?aba=aba-maquinas')
+
+def salvar_item_molde(request):
+    if request.method == 'POST':
+        id_reg = request.POST.get('id')
+        id_ref_molde = request.POST.get('id_referencia_molde') # Captura o ID vindo do <select>
+        item_codigo = request.POST.get('item_codigo', '').strip().upper()
+        descricao = request.POST.get('descricao', '').strip()
+        cod_complementar = request.POST.get('cod_complementar', '').strip().upper()
+        linha = request.POST.get('linha', '').strip()
+        status = request.POST.get('status', 'Ativo')
+        
+        # Tratamento para permitir salvar vazio/nulo se o operador não selecionar um molde
+        # Se vier uma string vazia do select, vira None (NULL no banco)
+        id_molde_tratado = int(id_ref_molde) if id_ref_molde and id_ref_molde.isdigit() else None
+
+        # Validação de Duplicidade baseada no id_item
+        duplicado = ItemPorMolde.objects.filter(item_codigo__iexact=item_codigo)
+        if id_reg:
+            duplicado = duplicado.exclude(id_item=id_reg)
+            
+        if duplicado.exists():
+            messages.error(request, f"Erro: O código de item '{item_codigo}' já existe!")
+            return redirect('/gerenciamento/?aba=aba-itens-molde')
+
+        if id_reg: # Fluxo de EDIÇÃO
+            obj = get_object_or_404(ItemPorMolde, id_item=id_reg)
+            obj.molde_id = id_molde_tratado  # Usa a propriedade correta do seu Model!
+            obj.item_codigo = item_codigo
+            obj.descricao = descricao
+            obj.cod_complementar = cod_complementar
+            obj.linha = linha
+            obj.status = status
+            obj.save()
+            messages.success(request, "Item de molde atualizado com sucesso!")
+            
+        else: # Fluxo de NOVO CADASTRO
+            ItemPorMolde.objects.create(
+                molde_id=id_molde_tratado,    # Usa a propriedade correta do seu Model!
+                item_codigo=item_codigo,
+                descricao=descricao,
+                cod_complementar=cod_complementar,
+                linha=linha,
+                status=status
+            )
+            messages.success(request, "Novo item cadastrado com sucesso!")
+            
+    return redirect('/gerenciamento/?aba=aba-itens-molde')
+
+def salvar_colaborador(request):
+    if request.method == 'POST':
+        id_reg = request.POST.get('id') # Oculto no HTML, vem preenchido apenas na edição
+        nome = request.POST.get('nome')
+        funcao = request.POST.get('funcao')
+        status = request.POST.get('status', 'Ativo')
+        
+        if id_reg: # Se tem ID, atualiza o existente
+            obj = get_object_or_404(Colaborador, id=id_reg)
+            obj.nome = nome
+            obj.funcao = funcao
+            obj.status = status
+            obj.save()
+            messages.success(request, "Colaborador atualizado com sucesso!")
+        else: # Se não tem ID, o SQLite gera o próximo automaticamente
+            Colaborador.objects.create(nome=nome, funcao=funcao, status=status)
+            messages.success(request, "Novo colaborador cadastrado com sucesso!")
+            
+    return redirect('/gerenciamento/?aba=aba-colaboradores') # Corrigido aqui!
+
+
+def salvar_problema(request):
+    if request.method == 'POST':
+        id_reg = request.POST.get('id')
+        texto_problema = request.POST.get('problema')
+        texto_descricao = request.POST.get('descricao', '').strip()
+        
+        if id_reg:
+            obj = get_object_or_404(Problema, id=id_reg)
+            obj.problema = texto_problema
+            obj.descricao = texto_descricao
+            obj.save()
+            messages.success(request, "Problema atualizado com sucesso!")
+        else:
+            Problema.objects.create(
+                problema=texto_problema, 
+                descricao=texto_descricao     # Grava na coluna física descricao
+            )
+            messages.success(request, "Novo problema cadastrado com sucesso!")
+            
+    return redirect('/gerenciamento/?aba=aba-problemas')
+
+
+def salvar_acao(request):
+    if request.method == 'POST':
+        id_reg = request.POST.get('id')
+        acao = request.POST.get('acao')
+        
+        if id_reg:
+            obj = get_object_or_404(AcaoManutencao, id=id_reg)
+            obj.acao = acao
+            obj.save()
+            messages.success(request, "Ação técnica atualizada com sucesso!")
+        else:
+            AcaoManutencao.objects.create(acao=acao)
+            messages.success(request, "Nova ação técnica cadastrada com sucesso!")
+            
+    return redirect('/gerenciamento/?aba=aba-acoes')
+
+    

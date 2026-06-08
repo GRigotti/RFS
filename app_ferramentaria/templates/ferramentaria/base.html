@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Soprano - CMMS Ferramentaria</title>
+    <title>{% block title %}Soprano - CMMS Ferramentaria{% endblock %}</title>
     <style>
         /* Reset básico e fontes */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { display: flex; height: 100vh; background-color: #f4eaeb; } /* Fundo levemente avermelhado do seu protótipo */
+        body { display: flex; height: 100vh; background-color: #f4eaeb; margin: 0; overflow: hidden; }
 
-        /* Barra Lateral (Menu) */
+        /* ==========================================================================
+           BARRA LATERAL (MENU RETRÁTIL) - INICIA MINIMIZADO
+           ========================================================================== */
         .sidebar {
             width: 250px;
             background-color: #1a3c5e; /* Azul escuro da Soprano */
@@ -17,7 +19,20 @@
             display: flex;
             flex-direction: column;
             padding-top: 20px;
+            position: fixed;
+            top: 0;
+            left: -250px; /* Escondido totalmente para fora da esquerda */
+            height: 100vh;
+            z-index: 3000; /* Fica acima de tudo */
+            transition: left 0.3s ease; /* Efeito suave de deslizar */
+            box-shadow: 4px 0 10px rgba(0,0,0,0.2);
         }
+        
+        /* Classe ativada pelo JavaScript para abrir o menu */
+        .sidebar.open {
+            left: 0;
+        }
+
         .sidebar h2 { text-align: center; margin-bottom: 30px; letter-spacing: 2px; }
         .sidebar a {
             color: white;
@@ -29,22 +44,63 @@
         }
         .sidebar a:hover { background-color: #11273d; border-left: 4px solid #4a90e2; }
 
-        /* Área de Conteúdo Principal */
+        /* Escudo escuro transparente quando o menu está aberto */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            z-index: 2999; /* Fica logo abaixo da sidebar */
+        }
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        /* ==========================================================================
+           ÁREA DE CONTEÚDO PRINCIPAL (OCUPA 100% DA TELA)
+           ========================================================================== */
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
+            width: 100%;
         }
 
-        /* Cabeçalho Superior */
+        /* Cabeçalho Superior Alinhado */
         .header {
             background-color: #1a3c5e;
             color: white;
-            text-align: center;
-            padding: 15px;
-            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            height: 60px;
+            font-size: 24px;
             font-weight: bold;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        /* Botão do Menu Hambúrguer */
+        .menu-toggle-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .menu-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         /* Onde o conteúdo das outras telas será injetado */
@@ -54,19 +110,26 @@
             overflow-y: auto;
         }
     </style>
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-    <aside class="sidebar">
+    <aside id="sidebar-menu" class="sidebar">
         <h2>≡ MENU</h2>
         <a href="{% url 'ferramentaria:dashboard' %}">📊 Dashboard</a>
-        <a href="{% url 'ferramentaria:historico' %}">📋 Histórico e OS</a>
+        <a href="{% url 'ferramentaria:historico' %}">📋 Histórico</a>
         <a href="{% url 'ferramentaria:gerenciamento' %}">⚙️ Gerenciamento</a>
     </aside>
 
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
     <div class="main-content">
         <header class="header">
-            Soprano
+            <button class="menu-toggle-btn" onclick="toggleSidebar()">☰ MENU</button>
+            
+            <div style="margin-right: auto; margin-left: 20px;">Soprano</div>
+            
+            <div style="font-size: 14px; font-weight: normal; opacity: 0.9;"></div>
         </header>
 
         <main class="content-area">
@@ -75,5 +138,24 @@
         </main>
     </div>
 
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar-menu');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            // Adiciona ou remove as classes que controlam a visibilidade sliding
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
+        }
+
+        // Atalho de usabilidade: Se pressionar ESC, fecha o menu automaticamente
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                document.getElementById('sidebar-menu').classList.remove('open');
+                document.getElementById('sidebar-overlay').classList.remove('show');
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
