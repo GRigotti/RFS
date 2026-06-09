@@ -38,13 +38,13 @@
 
     /* Caixa Marrom de Registros */
     .historico-box {
-        background-color: #9c8481;
+        background-color: #ffffff;
         border-radius: 8px;
         padding: 20px;
-        color: #3b2826;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        color: #000000;
+        box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
     }
-    .historico-box h3 { font-size: 1.3rem; margin-bottom: 15px; color: white; text-align: left; font-weight: bold; }
+    .historico-box h3 { font-size: 1.3rem; margin-bottom: 15px; color: rgb(0, 0, 0); text-align: left; font-weight: bold; }
     
     /* Cabeçalho Estilo Tabela */
     .table-header {
@@ -63,12 +63,12 @@
         display: flex;
         align-items: center;
         padding: 12px 5px;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
+        border-bottom: 1px solid rgb(0, 0, 0);
         cursor: pointer;
         transition: 0.2s;
         font-size: 0.9rem;
     }
-    .item-historico:hover { background-color: rgba(255,255,255,0.2); }
+    .item-historico:hover { background-color: rgba(26, 60, 94, 0.2); }
 
     /* Divisão Rígida de Colunas */
     .c-molde { flex: 0 0 15%; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -217,6 +217,31 @@
 
         {% if molde_filtro != 'todos' %}
         <div class="hist-lista">
+
+           <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 280px; overflow-y: auto; box-sizing: border-box; width: 100%;">
+                
+                <h4 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 8px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.1rem; font-weight: bold; margin-top: 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <span>📦 Itens Vinculados a esta Ferramenta</span>
+                    
+                    <span style="background-color: #9c8481; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px; font-family: sans-serif;">
+                        📍 {{ molde_selecionado.endereco_molde|default_if_none:"NÃO INFORMADO" }}
+                    </span>
+                </h4>
+
+                <ul style="list-style: none; padding: 0; margin: 0; text-align: left;">
+                    {% for item in itens_molde %}
+                        <li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-family: inherit;">
+                            <strong style="color: #333; font-size: 0.92rem;">{{ item.item_codigo }}</strong><br>
+                            <span style="font-size: 0.85rem; color: #666;">{{ item.descricao }}</span>
+                        </li>
+                    {% empty %}
+                        <li style="color: #888; font-style: italic; font-size: 0.9rem; padding: 8px 0;">
+                            Nenhum item cadastrado para este molde.
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
             <div class="historico-box">
                 <h3>Linha do Tempo de Manutenções: {{ molde_selecionado.molde_nome }}</h3>
                 <div class="table-header">

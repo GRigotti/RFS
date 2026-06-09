@@ -257,19 +257,6 @@
     .btn-submit { background-color: #28a745; color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold; }
     .btn-submit:hover { background-color: #218838; }
 
-
-    /* =========================================
-       RESPONSIVIDADE INTERNA (MONITORES MENORES)
-       ========================================= */
-    @media (max-width: 1250px) {
-        .dash-inner-split {
-            flex-direction: column; /* Faz os itens e o gráfico empilharem verticalmente APENAS dentro da esquerda */
-        }
-        .card-grafico, .card-itens {
-            height: auto;
-            max-height: none;
-        }
-    }
 </style>
 
 <div style="background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; margin-bottom: 20px;">
@@ -382,9 +369,11 @@
                 🔍 Selecione um molde no filtro acima para carregar as métricas e indicadores.
             </div>
         {% endif %}
-    </div> <div class="dash-right" style="flex: 3; min-width: 290px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box;">
+    </div> 
+    
+    <div class="dash-right" style="flex: 3; min-width: 290px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box;">
 
-    <div class="dash-right">
+    
         <button class="btn-reg" onclick="abrirModal('modalNovaOS')">
             Reg Solicitação
         </button>

@@ -7,7 +7,13 @@
     <style>
         /* Reset básico e fontes */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { display: flex; flex-direction: column; min-height: 100vh; background-color: #f4eaeb; } /* Layout vertical puro */
+        body { 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            background-color: #f4eaeb; 
+            overflow-y: scroll;
+        }
 
         /* Cabeçalho Superior Principal */
         .header {
@@ -70,19 +76,76 @@
             padding: 25px;
             flex: 1;
             overflow-y: auto;
+            
         }
-    </style>
+
+
+        /* =========================================
+       RESPONSIVIDADE INTERNA (MONITORES MENORES)
+       ========================================= */
+        @media (max-width: 1250px) {
+            .dash-inner-split {
+                flex-direction: column; /* Faz os itens e o gráfico empilharem verticalmente APENAS dentro da esquerda */
+            }
+            .card-grafico, .card-itens {
+                height: auto;
+                max-height: none;
+            }
+        }
+        /* ==========================================================================
+           2. RESPONSIVIDADE PARA CELULARES (ATÉ 768PX)
+           ========================================================================== */
+        @media (max-width: 768px) {
+            
+            /* Transforma o menu em uma barra fixa colada no rodapé da janela */
+            .nav-tabs-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                flex-direction: column; /* Alinha os itens do menu um em cima do outro */
+                padding: 0;
+                gap: 0;
+                border-bottom: none;
+                border-top: 2px solid #1a3c5e;
+                z-index: 10000; /* Garante que o menu fique na frente dos gráficos */
+                background-color: #ffffff;
+            }
+
+            /* Ajusta os links para ocuparem toda a largura no celular */
+            .nav-tab-link {
+                width: 100%;
+                justify-content: center;
+                padding: 12px 20px;
+                font-size: 15px;
+                border-bottom: none !important;
+                border-left: 4px solid transparent; /* Indicador passa para a lateral */
+                border-top: 1px solid #f0f0f0;
+            }
+
+            /* Indicador visual da aba ativa no celular */
+            .nav-tab-link.active-page {
+                border-left: 4px solid #1a3c5e;
+                background-color: rgba(26, 60, 94, 0.05);
+            }
+
+            /* Adiciona margem de segurança no fundo para o conteúdo não sumir sob o menu */
+            .content-area {
+                padding-bottom: 170px !important;
+            }
+        }
+        </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-    <header class="header" style="position: relative; display: flex; align-items: center; justify-content: center; padding: 15px 20px; min-height: 60px; box-sizing: border-box; width: 100%;">
+    <header class="header" style="position: relative; display: flex; align-items: center; min-height: 65px; box-sizing: border-box; width: 100%; padding: 0 20px;">
         
         <div class="header-title" style="position: absolute; top: 10px; left: 20px; font-size: 26px; font-weight: normal; opacity: 1; letter-spacing: 0.5px;">
             SOPRANO
         </div>
         
-        <div style="font-size: 26px; font-weight: 800; letter-spacing: 1.5px; line-height: 1; margin: 0;">
+        <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 26px; font-weight: 800; letter-spacing: 1.5px; line-height: 1; margin: 0; padding: 0; white-space: nowrap;">
             RFS
         </div>
 

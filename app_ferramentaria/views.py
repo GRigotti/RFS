@@ -168,10 +168,7 @@ def dashboard_view(request):
     return render(request, 'ferramentaria/dashboard.html', context)
 
 # ==============================================================================
-# 2. TELA DE HISTÓRICO E REGISTROS
-# ==============================================================================
-# ==============================================================================
-# 2. TELA DE HISTÓRICO E REGISTROS (COM ATUALIZAÇÃO DIRETA VIA MODAL)
+# 2. TELA DE HISTÓRICO E REGISTROS 
 # ==============================================================================
 def historico_view(request):
     # 🟢 1. PROCESSA A GRAVAÇÃO SE O MODAL ENVIAR UM POST
@@ -219,6 +216,7 @@ def historico_view(request):
         solicitacoes = SolicitacaoManutencao.objects.filter(
             molde=molde_selecionado
         ).order_by('-id').prefetch_related('problemas', 'solicitacaoacao_set__acao')
+        itens_molde = ItemPorMolde.objects.filter(molde=molde_selecionado)
         
         status_data = SolicitacaoManutencao.objects.filter(molde=molde_selecionado).values('status').annotate(total=Count('id'))
         top_data = Problema.objects.filter(solicitacaomanutencao__molde=molde_selecionado).annotate(total=Count('id')).order_by('-total')[:5]
@@ -227,6 +225,7 @@ def historico_view(request):
         valores_top = [p.total for p in top_data]
     else:
         molde_id = 'todos'
+        itens_molde = []
         status_data = SolicitacaoManutencao.objects.values('status').annotate(total=Count('id'))
         top_data = Molde.objects.filter(solicitacaomanutencao__isnull=False).annotate(total=Count('solicitacaomanutencao')).order_by('-total')[:5]
         titulo_top = "Top 5 Moldes com Mais Ocorrências"
@@ -252,7 +251,7 @@ def historico_view(request):
         'titulo_top': titulo_top,
         'labels_defeitos_gerais': json.dumps(labels_defeitos_gerais),
         'valores_defeitos_gerais': json.dumps(valores_defeitos_gerais),
-        
+        'itens_molde': itens_molde,
         # 🟢 NOVAS SELEÇÕES ENVIADAS PARA ALIMENTAR O MODO EDIÇÃO DO MODAL
         'lista_ferramenteiros': Colaborador.objects.filter(status='Ativo', funcao__iexact='Ferramenteiro'),
         'lista_acoes_manutencao': AcaoManutencao.objects.all().order_by('acao'),
