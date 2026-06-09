@@ -93,45 +93,78 @@
             }
         }
         /* ==========================================================================
-           2. RESPONSIVIDADE PARA CELULARES (ATÉ 768PX)
+           2. 📱 RESPONSIVIDADE PARA CELULARES (ATÉ 768PX) - FIM DA BAGUNÇA
            ========================================================================== */
         @media (max-width: 768px) {
             
-            /* Transforma o menu em uma barra fixa colada no rodapé da janela */
+            /* 🧭 MENU: Transforma em uma barra horizontal perfeita no rodapé */
             .nav-tabs-container {
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 width: 100%;
-                flex-direction: column; /* Alinha os itens do menu um em cima do outro */
+                flex-direction: row !important; /* 🟢 Garante um ao lado do outro */
                 padding: 0;
                 gap: 0;
                 border-bottom: none;
                 border-top: 2px solid #1a3c5e;
-                z-index: 10000; /* Garante que o menu fique na frente dos gráficos */
+                z-index: 10000;
                 background-color: #ffffff;
+                height: 60px; /* Altura fixa ergonômica para o polegar */
             }
 
-            /* Ajusta os links para ocuparem toda a largura no celular */
+            /* Distribui os 3 links igualmente preenchendo 100% da largura horizontal */
             .nav-tab-link {
-                width: 100%;
+                flex: 1 !important; 
+                width: auto !important;
                 justify-content: center;
-                padding: 12px 20px;
-                font-size: 15px;
+                align-items: center;
+                padding: 10px 2px !important;
+                font-size: 13px !important; /* Compacto para não quebrar texto em telas pequenas */
                 border-bottom: none !important;
-                border-left: 4px solid transparent; /* Indicador passa para a lateral */
-                border-top: 1px solid #f0f0f0;
+                border-top: 3px solid transparent !important; /* Destaque visual vai para o topo do botão */
+                white-space: nowrap;
             }
 
-            /* Indicador visual da aba ativa no celular */
+            /* Indicador visual de aba ativa adaptado para a barra horizontal inferior */
             .nav-tab-link.active-page {
-                border-left: 4px solid #1a3c5e;
+                border-top: 3px solid #1a3c5e !important;
+                border-left: none !important;
                 background-color: rgba(26, 60, 94, 0.05);
             }
 
-            /* Adiciona margem de segurança no fundo para o conteúdo não sumir sob o menu */
+            /* 📐 CONTEÚDO: Margem de proteção inferior menor para a barra horizontal */
             .content-area {
-                padding-bottom: 170px !important;
+                padding: 12px !important; /* Otimiza espaço físico útil no celular */
+                padding-bottom: 80px !important; /* Evita que o menu cubra os botões de baixo */
+            }
+
+            /* 💥 FIM DAS SOBREPOSIÇÕES: Força o empilhamento vertical completo dos painéis */
+            .dash-container {
+                flex-direction: column-reverse !important; /* 🟢 column-reverse: Joga as Pendências e Botão para o TOPO no telemóvel */
+                gap: 15px !important;
+            }
+
+            .hist-container {
+                flex-direction: column !important; /* Mantém o histórico na ordem normal */
+                gap: 15px !important;
+            }
+
+            .dash-right, .dash-left, .hist-lista, .hist-dash {
+                flex: 1 !important;
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+
+            /* Torna os formulários de filtro responsivos (Balanço Geral de OS) */
+            .content-area form {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            .content-area form div {
+                margin-left: 0 !important;
+                width: 100% !important;
+                justify-content: space-between !important;
             }
         }
         </style>
