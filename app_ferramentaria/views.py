@@ -1,4 +1,6 @@
 import json
+from datetime import datetime, timedelta
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Count
@@ -10,6 +12,46 @@ from django.views.decorators.csrf import csrf_protect
 # 1. TELA DE DASHBOARD
 # ==============================================================================
 def dashboard_view(request):
+
+    # ==========================================================================
+    # LÓGICA DO NOVO FILTRO DE PERÍODO (PADRÃO: ÚLTIMOS 30 DIAS)
+    # ==========================================================================
+    data_fim_padrao = timezone.now()
+    data_inicio_padrao = data_fim_padrao - timedelta(days=30)
+    
+    # Captura as datas vindas da URL (via método GET do formulário)
+    data_inicio_str = request.GET.get('data_inicio')
+    data_fim_str = request.GET.get('data_fim')
+    
+    # Se existirem datas informadas pelo usuário, converte para objeto datetime
+    if data_inicio_str:
+        data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d')
+        # Torna o datetime consciente do fuso horário para evitar warnings do Django
+        data_inicio = timezone.make_aware(data_inicio)
+    else:
+        data_inicio = data_inicio_padrao
+        data_inicio_str = data_inicio.strftime('%Y-%m-%d')
+        
+    if data_fim_str:
+        data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d')
+        # Define o fim do dia (23:59:59) para abranger todas as OSs do último dia
+        data_fim = data_fim.replace(hour=23, minute=59, second=59)
+        data_fim = timezone.make_aware(data_fim)
+    else:
+        data_fim = data_fim_padrao
+        data_fim_str = data_fim.strftime('%Y-%m-%d')
+
+    # Executa a contagem das Ordens de Serviço filtradas por data no banco
+    total_abertas_periodo = SolicitacaoManutencao.objects.filter(
+        data_abertura__range=[data_inicio, data_fim]
+    ).count()
+    
+    total_fechadas_periodo = SolicitacaoManutencao.objects.filter(
+        data_fechamento__range=[data_inicio, data_fim],
+    ).count()
+
+
+
     # SE O USUÁRIO CLICOU EM "SALVAR" NO MODAL
     if request.method == 'POST':
         tipo_acao = request.POST.get('tipo_acao')
@@ -104,6 +146,7 @@ def dashboard_view(request):
     context = {
         'pendencias': pendencias,
         'lista_moldes': Molde.objects.filter(status = "Ativo"),
+        'moldes': Molde.objects.filter(status = "Ativo"),
         'lista_maquinas': Maquina.objects.filter(status = "Ativo"),
         'lista_operadores': Colaborador.objects.filter(status = "Ativo", funcao__iexact='Operador'),
         'lista_problemas': Problema.objects.all(),
@@ -116,6 +159,10 @@ def dashboard_view(request):
         'itens_molde': itens_molde,
         'labels_problemas': json.dumps(labels_problemas),
         'valores_problemas': json.dumps(valores_problemas),
+        'total_abertas_periodo': total_abertas_periodo,
+        'total_fechadas_periodo': total_fechadas_periodo,
+        'data_inicio_filtro': data_inicio_str,
+        'data_fim_filtro': data_fim_str,
     }
     
     return render(request, 'ferramentaria/dashboard.html', context)

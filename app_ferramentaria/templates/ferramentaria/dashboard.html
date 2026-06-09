@@ -272,49 +272,86 @@
     }
 </style>
 
-<div class="dash-container">
-    
-    <div class="dash-left">
+<div style="background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; margin-bottom: 20px;">
+    <form method="GET" action="" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; width: 100%; margin: 0; padding: 0;">
         
-        <div style="width: 100%; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px;">
-            <form method="GET" id="formFiltroMolde" style="display: flex; gap: 15px; align-items: center;">
-                <label style="font-weight: bold; color: #fff; white-space: nowrap;">Analisar Molde:</label>
-                <select name="molde" onchange="document.getElementById('formFiltroMolde').submit()" style="padding: 10px; border-radius: 4px; flex: 1; border: none; cursor: pointer;">
-                    <option value="">-- Selecione o molde na lista --</option>
-                    {% for molde in lista_moldes %}
-                        <option value="{{ molde.id }}" {% if molde.id|stringformat:"s" == molde_selecionado_id %}selected{% endif %}>
-                            {{ molde.molde_nome }}
-                        </option>
+        {% if molde_selecionado %}
+            <input type="hidden" name="molde" value="{{ molde_selecionado.id }}">
+        {% endif %}
+
+        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+            <h3 style="color: #1a3c5e; font-size: 1.15rem; font-weight: bold; margin: 0; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
+                📊 Balanço Geral de OS
+            </h3>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="background-color: #d9534f; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.95rem; line-height: 1;">
+                    {{ total_abertas_periodo }}
+                </span>
+                <span style="color: #495057; font-size: 0.9rem; font-weight: 600;">Criadas</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.95rem; line-height: 1;">
+                    {{ total_fechadas_periodo }}
+                </span>
+                <span style="color: #495057; font-size: 0.9rem; font-weight: 600;">Concluídas</span>
+            </div>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-left: auto;">
+            <label style="font-size: 0.85rem; font-weight: bold; color: #666; margin: 0;">Período:</label>
+            <input type="date" name="data_inicio" value="{{ data_inicio_filtro }}" style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; color: #333; height: 34px; box-sizing: border-box; background-color: white;">
+            <label style="font-size: 0.85rem; font-weight: bold; color: #666; margin: 0;">até</label>
+            <input type="date" name="data_fim" value="{{ data_fim_filtro }}" style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; color: #333; height: 34px; box-sizing: border-box; background-color: white;">
+            <button type="submit" style="background-color: #1a3c5e; color: white; border: none; padding: 0 18px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.85rem; height: 34px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; box-sizing: border-box;">
+                Filtrar
+            </button>
+        </div>
+    </form>
+</div>
+
+
+<div class="dash-container" style="display: flex !important; flex-direction: row !important; gap: 20px; width: 100%; align-items: stretch; box-sizing: border-box;">
+
+    <div class="dash-left" style="flex: 7; background-color: #9c8481; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); box-sizing: border-box;">
+        
+        <div class="analisar-molde-container" style="width: 100%;">
+            <form method="GET" action="" style="display: flex; align-items: center; gap: 15px; width: 100%; margin: 0;">
+                <input type="hidden" name="data_inicio" value="{{ data_inicio_filtro }}">
+                <input type="hidden" name="data_fim" value="{{ data_fim_filtro }}">
+                
+                <label style="color: white; font-weight: bold; font-size: 1.1rem; white-space: nowrap; margin: 0;">Analisar Molde:</label>
+                
+                <select name="molde" onchange="this.form.submit()" style="flex: 1; padding: 10px; border-radius: 4px; border: none; font-size: 1rem; font-weight: bold; color: #333; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                    <option value="">-- Selecione um Molde para Analisar --</option>
+                    {% for m in moldes %}
+                        <option value="{{ m.id }}" {% if molde_selecionado.id == m.id %}selected{% endif %}>{{ m.molde_nome }}</option>
                     {% endfor %}
                 </select>
             </form>
         </div>
 
         {% if molde_selecionado %}
-            
-            <div class="dash-inner-split" style="margin-bottom: 20px;">
+            <div class="dash-inner-split" style="display: flex; gap: 20px; width: 100%;">
                 
-                <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; min-height: 130px; box-sizing: border-box;">
+                <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 130px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box;">
                     <h4 style="color: #666; margin: 0 0 8px 0; text-transform: uppercase; font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px;">Contagem de Ciclos / Batidas</h4>
                     <div style="font-size: 2.5rem; font-weight: bold; color: #1a3c5e; line-height: 1;">--</div>
                     <span style="font-size: 0.75rem; color: #999; font-style: italic; margin-top: 8px;">Aguardando integração de sensores IoT com a API</span>
                 </div>
 
-                <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; min-height: 130px; box-sizing: border-box;">
-                    <span style="font-size: 2rem; line-height: 1;">📍</span>
+                <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 20px; min-height: 130px; box-sizing: border-box;">
+                    <span style="font-size: 2.2rem; line-height: 1;">📍</span>
                     <div style="text-align: left;">
                         <h4 style="color: #666; margin: 0; text-transform: uppercase; font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px;">Endereço / Prateleira</h4>
-                        <div style="font-size: 1.4rem; font-weight: bold; color: #1a3c5e; margin-top: 6px; text-transform: uppercase;">
+                        <div style="font-size: 1.6rem; font-weight: bold; color: #1a3c5e; margin-top: 5px; text-transform: uppercase;">
                             {{ molde_selecionado.endereco_molde|default_if_none:"NÃO INFORMADO" }}
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            <div class="dash-inner-split">
-                
-                <div class="card-itens">
+            <div class="dash-inner-split" style="display: flex; gap: 20px; width: 100%;">
+                <div class="card-itens" style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 380px; overflow-y: auto;">
                     <h3 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 10px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.2rem; font-weight: bold;">Itens Vinculados</h3>
                     <ul style="list-style: none; padding: 0; margin: 0;">
                         {% for item in itens_molde %}
@@ -328,21 +365,24 @@
                     </ul>
                 </div>
 
-                <div class="card-grafico">
-                    <h3 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 10px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.2rem; width: 100%; text-align: left; font-weight: bold;">Incidência de Problemas</h3>
-                    <div class="chart-container">
+                <div class="card-grafico" style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height: 380px; display: flex; flex-direction: column;">
+                    <h3 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 10px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.2rem; width: 100%; text-align: left; font-weight: bold; display: flex; align-items: center; box-sizing: border-box;">
+                        <span>Incidência de Problemas</span>
+                        <span id="badge-total-problemas" style="margin-left: auto; background-color: #9c8481; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">
+                            Total: --
+                        </span>
+                    </h3>
+                    <div class="chart-container" style="position: relative; width: 100%; height: 280px;">
                         <canvas id="graficoProblemas"></canvas>
                     </div>
                 </div>
-
             </div>
-            
         {% else %}
-            <div style="flex: 1; display: flex; align-items: center; justify-content: center; color: white; opacity: 0.8; font-size: 1.3rem; text-align: center; min-height: 300px;">
-                Use o filtro acima para carregar as métricas do molde.
+            <div style="display: flex; align-items: center; justify-content: center; color: white; opacity: 0.9; font-size: 1.2rem; text-align: center; min-height: 250px;">
+                🔍 Selecione um molde no filtro acima para carregar as métricas e indicadores.
             </div>
         {% endif %}
-    </div>
+    </div> <div class="dash-right" style="flex: 3; min-width: 290px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box;">
 
     <div class="dash-right">
         <button class="btn-reg" onclick="abrirModal('modalNovaOS')">
@@ -603,6 +643,7 @@
     const labelsProblemas = JSON.parse('{{ labels_problemas|safe }}');
     const valoresProblemas = JSON.parse('{{ valores_problemas|safe }}');
     
+    // 1. Instancia o gráfico normalmente com as configurações limpas
     new Chart(ctx, {
         type: 'pie',
         data: {
@@ -621,6 +662,23 @@
             }
         }
     });
+
+    // 2. Executa o cálculo do total FORA do gráfico, usando a variável que você já tem
+    try {
+        if (typeof valoresProblemas !== 'undefined' && valoresProblemas.length > 0) {
+            // Soma todos os números da lista utilizando a função reduce
+            var somaTotal = valoresProblemas.reduce(function(acumulador, valorAtual) {
+                return acumulador + Number(valorAtual);
+            }, 0);
+            
+            // Injeta o valor somado diretamente na nossa badge do HTML
+            document.getElementById('badge-total-problemas').innerText = "Total: " + somaTotal;
+        } else {
+            document.getElementById('badge-total-problemas').innerText = "Total: 0";
+        }
+    } catch (erro) {
+        console.log("Aviso ao carregar totalizador: ", erro);
+    }
 </script>
 {% endif %}
 
