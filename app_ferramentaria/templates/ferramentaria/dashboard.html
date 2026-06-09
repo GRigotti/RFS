@@ -87,6 +87,9 @@
     }
     .btn-reg:hover { background-color: #11273d; }
 
+    /* =========================================
+       ESTRUTURA DA CAIXA "EM ABERTO" (TABELA)
+       ========================================= */
     .pendencias-box {
         flex: 1;
         background-color: #9c8481;
@@ -101,31 +104,119 @@
         margin-bottom: 15px;
         font-size: 1.4rem;
     }
+
+    /* Cabeçalho alinhado com as colunas de baixo */
     .pendencias-header {
-        display: flex;
-        justify-content: space-between;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
         font-size: 0.8rem;
         font-weight: bold;
         border-bottom: 1px solid rgba(0,0,0,0.2);
-        padding-bottom: 5px;
+        padding: 0 5px 5px 5px;
         margin-bottom: 10px;
     }
 
-    .lista-pendencias { list-style: none; padding: 0; margin: 0; }
+    .lista-pendencias {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        width: 100% !important;
+        display: block !important;
+    }
+    
     .item-pendencia {
-        display: flex;
-        justify-content: space-between;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
         padding: 12px 5px;
         border-bottom: 1px solid rgba(255,255,255,0.2);
         cursor: pointer;
         transition: 0.2s;
         font-size: 0.9rem;
+        overflow: hidden !important;
     }
     .item-pendencia:hover { background-color: rgba(255,255,255,0.2); }
-    
-    .col-molde { flex: 1; font-weight: bold; }
-    .col-prob { flex: 1.8; padding: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .col-data { flex: 0.6; text-align: right; white-space: nowrap; }
+
+    /* COLUNA 1: Molde ocupa 22% */
+    .col-molde {
+        flex: 0 0 22% !important;
+        width: 22% !important;
+        max-width: 22% !important;
+        font-weight: bold;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* COLUNA 2: Problema ocupa 58% e alinha o indicativo com o texto */
+    .col-prob {
+        flex: 0 0 58% !important;
+        width: 58% !important;
+        max-width: 58% !important;
+        padding: 0 5px;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .col-prob-texto {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+    }
+
+    /* COLUNA 3: Data ocupa 20% e joga para a direita */
+    .col-data {
+        flex: 0 0 20% !important;
+        width: 20% !important;
+        max-width: 20% !important;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    /* MINI INDICATIVOS (BADGES) SUPER COMPACTOS */
+    .badge-status {
+        padding: 2px 4px !important;
+        border-radius: 3px !important;
+        font-size: 0.65rem !important;
+        font-weight: bold !important;
+        color: white !important;
+        white-space: nowrap !important;
+        display: inline-block !important;
+        line-height: 1 !important;
+    }
+    .badge-nova { background-color: #d9534f !important; }
+    .badge-manutencao { background-color: #2b3a4a !important; }
+
+    /* CORREÇÃO DOS CHECKBOXES: Força tamanho nativo automático */
+    .form-group input[type="checkbox"] {
+        width: auto !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        cursor: pointer;
+    }
+
+    /* Alinhamento lateral perfeito entre o quadradinho e o texto */
+    .checkbox-container-label {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        font-weight: normal !important;
+        margin-bottom: 8px;
+        cursor: pointer;
+    }
 
     /* =========================================
        ESTILOS DOS MODAIS (JANELAS POP-UP)
@@ -145,18 +236,27 @@
         width: 450px;
         max-width: 90%;
         position: relative;
-        max-height: 85vh;       /* Não deixa o modal passar de 85% da altura do monitor */
-        overflow-y: auto;       /* Cria uma barra de rolagem interna se os campos não couberem */
+        max-height: 85vh; /* Não deixa o modal passar de 85% da altura do monitor */
+        overflow-y: auto; /* Cria uma barra de rolagem interna se os campos não couberem */
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-
     }
     .modal-close { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #aaa; }
     .modal-close:hover { color: #333; }
+    
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    
+    /* 🟢 AQUI ESTÁ A MUDANÇA CRÍTICA: O :not([type="checkbox"]) impede que esta regra quebre as caixas de seleção */
+    .form-group input:not([type="checkbox"]), .form-group select, .form-group textarea { 
+        width: 100%; 
+        padding: 8px; 
+        border: 1px solid #ccc; 
+        border-radius: 4px; 
+    }
+    
     .btn-submit { background-color: #28a745; color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold; }
     .btn-submit:hover { background-color: #218838; }
+
 
     /* =========================================
        RESPONSIVIDADE INTERNA (MONITORES MENORES)
@@ -191,16 +291,31 @@
         </div>
 
         {% if molde_selecionado %}
-            <div style="width: 100%; background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <h4 style="color: #666; margin-bottom: 5px; text-transform: uppercase; font-size: 0.85rem; font-weight: bold;">Contagem de Ciclos / Batidas</h4>
-                <div style="font-size: 2.3rem; font-weight: bold; color: #1a3c5e; line-height: 1;">--</div>
-                <span style="font-size: 0.75rem; color: #999; font-style: italic;">Aguardando integração de sensores IoT com a API</span>
+            
+            <div class="dash-inner-split" style="margin-bottom: 20px;">
+                
+                <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; min-height: 130px; box-sizing: border-box;">
+                    <h4 style="color: #666; margin: 0 0 8px 0; text-transform: uppercase; font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px;">Contagem de Ciclos / Batidas</h4>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: #1a3c5e; line-height: 1;">--</div>
+                    <span style="font-size: 0.75rem; color: #999; font-style: italic; margin-top: 8px;">Aguardando integração de sensores IoT com a API</span>
+                </div>
+
+                <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; min-height: 130px; box-sizing: border-box;">
+                    <span style="font-size: 2rem; line-height: 1;">📍</span>
+                    <div style="text-align: left;">
+                        <h4 style="color: #666; margin: 0; text-transform: uppercase; font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px;">Endereço / Prateleira</h4>
+                        <div style="font-size: 1.4rem; font-weight: bold; color: #1a3c5e; margin-top: 6px; text-transform: uppercase;">
+                            {{ molde_selecionado.endereco_molde|default_if_none:"NÃO INFORMADO" }}
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <div class="dash-inner-split">
                 
                 <div class="card-itens">
-                    <h3 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 10px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.2rem;">Itens Vinculados</h3>
+                    <h3 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 10px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.2rem; font-weight: bold;">Itens Vinculados</h3>
                     <ul style="list-style: none; padding: 0; margin: 0;">
                         {% for item in itens_molde %}
                             <li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
@@ -214,13 +329,14 @@
                 </div>
 
                 <div class="card-grafico">
-                    <h3 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 10px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.2rem; width: 100%; text-align: left;">Incidência de Problemas</h3>
+                    <h3 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 10px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.2rem; width: 100%; text-align: left; font-weight: bold;">Incidência de Problemas</h3>
                     <div class="chart-container">
                         <canvas id="graficoProblemas"></canvas>
                     </div>
                 </div>
 
             </div>
+            
         {% else %}
             <div style="flex: 1; display: flex; align-items: center; justify-content: center; color: white; opacity: 0.8; font-size: 1.3rem; text-align: center; min-height: 300px;">
                 Use o filtro acima para carregar as métricas do molde.
@@ -247,27 +363,37 @@
                     data-id="{{ os.id }}" 
                     data-molde="{{ os.molde.molde_nome }}" 
                     data-data="{{ os.data_abertura|date:'d/m/Y H:i' }}"
-                    
                     data-maquina="{{ os.maquina.maquina }}"
                     data-operador="{{ os.operador.nome }}"
                     data-op="{{ os.ordem_producao }}"
                     data-dataop="{{ os.data_op|date:'d/m/Y' }}"
                     data-parecer-prod="{{ os.parecer_producao|default:'Nenhum parecer informado.' }}"
                     data-problemas="{% for prob in os.problemas.all %}{{ prob.problema }}{% if not forloop.last %}, {% endif %}{% empty %}Relato textual{% endfor %}"
-                    
+                    data-status="{{ os.status }}"
                     onclick="abrirModalDetalhes(this)">
-                    <span class="col-molde">{{ os.molde.molde_nome|truncatechars:12 }}</span>
+                    
+                    <span class="col-molde">{{ os.molde.molde_nome }}</span>
+                    
                     <span class="col-prob">
-                        {% for prob in os.problemas.all %}
-                            {{ prob.problema }}{% if not forloop.last %}, {% endif %}
-                        {% empty %}
-                            Relato textual
-                        {% endfor %}
+                        {% if os.status == 'Em Manutenção' %}
+                            <span class="badge-status badge-manutencao">MAN</span>
+                        {% else %}
+                            <span class="badge-status badge-nova">PEN</span>
+                        {% endif %}
+                        
+                        <span class="col-prob-texto">
+                            {% for prob in os.problemas.all %}
+                                {{ prob.problema }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                Relato textual
+                            {% endfor %}
+                        </span>
                     </span>
+                    
                     <span class="col-data">{{ os.data_abertura|date:"d/m" }}</span>
                 </li>
                 {% empty %}
-                <li class="item-pendencia" style="justify-content: center; color: white; opacity: 0.7;">Nenhuma pendência no momento!</li>
+                <li class="item-pendencia" style="justify-content: center; color: white; opacity: 0.7;">Nenhuma ordem de serviço em aberto!</li>
                 {% endfor %}
             </ul>
         </div>
@@ -328,7 +454,7 @@
                 <label>Problemas Identificados</label>
                 <div style="max-height: 100px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 4px; background-color: #f9f9f9;">
                     {% for prob in lista_problemas %}
-                        <label style="display: block; font-weight: normal; margin-bottom: 5px; cursor: pointer;">
+                        <label class="checkbox-container-label">
                             <input type="checkbox" name="problemas_ids" value="{{ prob.id }}"> {{ prob.problema }}
                         </label>
                     {% empty %}
@@ -373,6 +499,7 @@
         
         <form method="POST" action="">
             {% csrf_token %}
+            <input type="hidden" name="tipo_acao" value="registrar_manutencao">
             <input type="hidden" name="os_id" id="input-os-id">
             
             <div class="form-group">
@@ -386,10 +513,10 @@
             </div>
 
             <div class="form-group">
-                <label>AÇÕES REALIZADAS (Tabela acoes_manutencao)</label>
+                <label>AÇÕES REALIZADAS</label>
                 <div style="max-height: 110px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 4px; background-color: #fafafa;">
                     {% for acao in lista_acoes_manutencao %}
-                        <label style="display: block; font-weight: normal; margin-bottom: 5px; cursor: pointer; font-size: 0.9rem;">
+                        <label class="checkbox-container-label" style="font-size: 0.9rem;">
                             <input type="checkbox" name="acoes_realizadas_ids" value="{{ acao.id }}"> {{ acao.acao }}
                         </label>
                     {% empty %}
@@ -405,9 +532,9 @@
             
             <div class="form-group">
                 <label>Status do Atendimento</label>
-                <select name="novo_status" required>
-                    <option value="Em Manutenção">Em Manutenção (Rampando/Ajuste)</option>
-                    <option value="Concluído">Concluído (Liberado para Produção)</option>
+                <select name="novo_status" id="detalhe-status" required>
+                    <option value="Em Manutenção"> Em Manutenção</option>
+                    <option value="Concluído"> Concluído</option>
                 </select>
             </div>
             
@@ -447,7 +574,9 @@
         
         // Seta o ID da OS no input hidden para enviar via POST correto
         document.getElementById('input-os-id').value = id;
-        
+        var statusAtual = elementoClicado.getAttribute('data-status');
+        document.getElementById('detalhe-status').value = statusAtual || "Aberto";
+
         abrirModal('modalDetalhesOS');
     }
 

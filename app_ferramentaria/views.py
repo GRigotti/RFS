@@ -38,6 +38,36 @@ def dashboard_view(request):
             
             messages.success(request, "Solicitação registrada com sucesso!")
             return redirect('ferramentaria:dashboard')
+        
+        elif tipo_acao == 'registrar_manutencao':
+            os_id = request.POST.get('os_id')
+            responsavel_id = request.POST.get('responsavel_id')
+            parecer_ferramentaria = request.POST.get('parecer_ferramentaria')
+            novo_status = request.POST.get('novo_status') # "Em Manutenção" ou "Concluído"
+            
+            # Captura a lista de checkboxes marcados
+            lista_acoes_ids = request.POST.getlist('acoes_realizadas_ids')
+            
+            # 🛑 VALIDAÇÃO DE SEGURANÇA REQUISITADA:
+            # Se o status for "Concluído" e a lista de ações estiver vazia, cancela a operação
+            if novo_status == 'Concluído' and not lista_acoes_ids:
+                messages.error(
+                    request, 
+                    f"Erro ao salvar OS nº {os_id}: Para alterar o status para 'Concluído', é obrigatório selecionar pelo menos uma Ação Realizada!"
+                )
+                return redirect('ferramentaria:dashboard') # Redireciona de volta sem salvar nada
+
+            # Se passar na validação (ou se for "Em Manutenção", que permite lista vazia), chama o Service
+            SolicitacaoService.registrar_manutencao(
+                os_id=os_id,
+                responsavel_id=responsavel_id,
+                parecer_ferramentaria=parecer_ferramentaria,
+                novo_status=novo_status,
+                lista_acoes_ids=lista_acoes_ids
+            )
+            
+            messages.success(request, f"Manutenção gravada! OS nº {os_id} atualizada para '{novo_status}'.")
+            return redirect('ferramentaria:dashboard')
 
 
     # ======================================================
@@ -69,7 +99,7 @@ def dashboard_view(request):
             labels_problemas.append(p.problema)
             valores_problemas.append(p.total)
 
-    pendencias = SolicitacaoManutencao.objects.filter(status='Aberto').order_by('-data_abertura')
+    pendencias = SolicitacaoManutencao.objects.filter(status__in=['Aberto', 'Em Manutenção']).order_by('-data_abertura')
     
     context = {
         'pendencias': pendencias,

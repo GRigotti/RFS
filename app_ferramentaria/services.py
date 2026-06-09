@@ -150,28 +150,20 @@ class SolicitacaoService:
 
     @staticmethod
     @transaction.atomic
-    def registrar_manutencao(os_id, responsavel_id, parecer_ferramentaria, novo_status="Em Manutenção", lista_acoes_ids=None):
-        """
-        Atualiza uma OS existente. Usado pelo modal 'Tratar Pendência'.
-        """
-        try:
-            os = SolicitacaoManutencao.objects.get(id=os_id)
+    def registrar_manutencao(os_id, responsavel_id, parecer_ferramentaria, novo_status, lista_acoes_ids):
+        # 1. Busca a Ordem de Serviço aberta que está sendo tratada
+        os_obj = SolicitacaoManutencao.objects.get(id=os_id)
+        
+        # 2. Atualiza os campos preenchidos pelo ferramenteiro
+        os_obj.responsavel_id = responsavel_id
+        os_obj.parecer_ferramentaria = parecer_ferramentaria
+        os_obj.status = novo_status  # Grava dinamicamente "Em Manutenção" ou "Concluído"
+        
+        # 3. Salva a alteração da linha do registro no banco SQLite
+        os_obj.save()
+        
+        # 4. Atualiza os vínculos ManyToMany das ações realizadas (se houver essa relação no model)
+        if lista_acoes_ids:
+            os_obj.acoes_realizadas.set(lista_acoes_ids) # Ajuste para o nome do campo ManyToMany do seu Model
             
-            # Atualiza os dados textuais e de responsabilidade
-            os.responsavel_id = responsavel_id
-            os.parecer_ferramentaria = parecer_ferramentaria
-            os.status = novo_status
-            
-            # Se o ferramenteiro marcou como concluído, carimba a data de fechamento na hora atual
-            if novo_status == "Concluído":
-                os.data_fechamento = timezone.now()
-                
-            os.save()
-            
-            # Se ele informou as ações padronizadas que realizou, atualiza a tabela de ligação
-            if lista_acoes_ids:
-                os.acoes.set(lista_acoes_ids)
-                
-            return True
-        except SolicitacaoManutencao.DoesNotExist:
-            return False
+           

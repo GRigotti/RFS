@@ -3,109 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Soprano - CMMS Ferramentaria{% endblock %}</title>
+    <title>{% block title %}RFS{% endblock %}</title>
     <style>
         /* Reset básico e fontes */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { display: flex; height: 100vh; background-color: #f4eaeb; margin: 0; overflow: hidden; }
+        body { display: flex; flex-direction: column; min-height: 100vh; background-color: #f4eaeb; } /* Layout vertical puro */
 
-        /* ==========================================================================
-           BARRA LATERAL (MENU RETRÁTIL) - INICIA MINIMIZADO
-           ========================================================================== */
-        .sidebar {
-            width: 250px;
+        /* Cabeçalho Superior Principal */
+        .header {
             background-color: #1a3c5e; /* Azul escuro da Soprano */
             color: white;
+            padding: 15px 25px;
+            font-size: 26px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
-            flex-direction: column;
-            padding-top: 20px;
-            position: fixed;
-            top: 0;
-            left: -250px; /* Escondido totalmente para fora da esquerda */
-            height: 100vh;
-            z-index: 3000; /* Fica acima de tudo */
-            transition: left 0.3s ease; /* Efeito suave de deslizar */
-            box-shadow: 4px 0 10px rgba(0,0,0,0.2);
+            justify-content: space-between;
+            align-items: center;
         }
         
-        /* Classe ativada pelo JavaScript para abrir o menu */
-        .sidebar.open {
-            left: 0;
-        }
-
-        .sidebar h2 { text-align: center; margin-bottom: 30px; letter-spacing: 2px; }
-        .sidebar a {
-            color: white;
-            text-decoration: none;
-            padding: 15px 20px;
-            font-size: 16px;
-            border-left: 4px solid transparent;
-            transition: 0.3s;
-        }
-        .sidebar a:hover { background-color: #11273d; border-left: 4px solid #4a90e2; }
-
-        /* Escudo escuro transparente quando o menu está aberto */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0,0,0,0.4);
-            display: none;
-            z-index: 2999; /* Fica logo abaixo da sidebar */
-        }
-        .sidebar-overlay.show {
-            display: block;
+        .header-title {
+            letter-spacing: 1px;
         }
 
         /* ==========================================================================
-           ÁREA DE CONTEÚDO PRINCIPAL (OCUPA 100% DA TELA)
+           BARRA DE NAVEGAÇÃO POR ABAS HORIZONTAIS (ESTILO NAVBAR SUPERIOR)
            ========================================================================== */
-        .main-content {
-            flex: 1;
+        .nav-tabs-container {
+            background-color: #ffffff; /* Fundo branco para destacar as abas */
+            border-bottom: 1px solid #e9ecef;
             display: flex;
-            flex-direction: column;
-            width: 100%;
+            padding: 0 25px;
+            gap: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        /* Cabeçalho Superior Alinhado */
-        .header {
-            background-color: #1a3c5e;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            height: 60px;
-            font-size: 24px;
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-
-        /* Botão do Menu Hambúrguer */
-        .menu-toggle-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
+        .nav-tab-link {
+            color: #1a3c5e;
+            text-decoration: none;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 12px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-        .menu-toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 3px solid transparent; /* Linha inferior invisível por padrão */
+            transition: all 0.2s ease;
         }
 
-        /* Onde o conteúdo das outras telas será injetado */
+        /* Efeito de passar o mouse por cima (Hover) */
+        .nav-tab-link:hover {
+            background-color: #f8f9fa;
+            color: #4a90e2;
+            border-bottom: 3px solid #4a90e2;
+        }
+
+        /* Estilo para destacar visualmente a página em que o usuário está */
+        .nav-tab-link.active-page {
+            color: #1a3c5e;
+            border-bottom: 3px solid #1a3c5e;
+            background-color: rgba(26, 60, 94, 0.05);
+        }
+
+        /* Área de Conteúdo Principal */
         .content-area {
-            padding: 20px;
+            padding: 25px;
             flex: 1;
             overflow-y: auto;
         }
@@ -114,48 +76,35 @@
 </head>
 <body>
 
-    <aside id="sidebar-menu" class="sidebar">
-        <h2>≡ MENU</h2>
-        <a href="{% url 'ferramentaria:dashboard' %}">📊 Dashboard</a>
-        <a href="{% url 'ferramentaria:historico' %}">📋 Histórico</a>
-        <a href="{% url 'ferramentaria:gerenciamento' %}">⚙️ Gerenciamento</a>
-    </aside>
+    <header class="header">
+        <div class="header-title">Soprano</div>
+        <div style="font-size: 14px; font-weight: normal; opacity: 0.8;">CMMS Ferramentaria</div>
+    </header>
 
-    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <nav class="nav-tabs-container">
+        <a href="{% url 'ferramentaria:dashboard' %}" class="nav-tab-link" id="nav-dash">📊 Dashboard</a>
+        <a href="{% url 'ferramentaria:historico' %}" class="nav-tab-link" id="nav-hist">📋 Histórico e OS</a>
+        <a href="{% url 'ferramentaria:gerenciamento' %}" class="nav-tab-link" id="nav-gerenc">⚙️ Gerenciamento</a>
+    </nav>
 
-    <div class="main-content">
-        <header class="header">
-            <button class="menu-toggle-btn" onclick="toggleSidebar()">☰ MENU</button>
-            
-            <div style="margin-right: auto; margin-left: 20px;">Soprano</div>
-            
-            <div style="font-size: 14px; font-weight: normal; opacity: 0.9;"></div>
-        </header>
-
-        <main class="content-area">
-            {% block content %}
-            {% endblock %}
-        </main>
-    </div>
+    <main class="content-area">
+        {% block content %}
+        {% endblock %}
+    </main>
 
     <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar-menu');
-            const overlay = document.getElementById('sidebar-overlay');
-            
-            // Adiciona ou remove as classes que controlam a visibilidade sliding
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('show');
-        }
-
-        // Atalho de usabilidade: Se pressionar ESC, fecha o menu automaticamente
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                document.getElementById('sidebar-menu').classList.remove('open');
-                document.getElementById('sidebar-overlay').classList.remove('show');
+        document.addEventListener("DOMContentLoaded", function() {
+            const currentUrl = window.location.pathname;
+            if (currentUrl.includes("dashboard")) {
+                document.getElementById("nav-dash").classList.add("active-page");
+            } else if (currentUrl.includes("historico")) {
+                document.getElementById("nav-hist").classList.add("active-page");
+            } else if (currentUrl.includes("gerenciamento")) {
+                document.getElementById("nav-gerenc").classList.add("active-page");
             }
         });
     </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
