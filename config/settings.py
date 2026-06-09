@@ -10,7 +10,7 @@ SECRET_KEY = 'django-insecure-chave-padrao-de-desenvolvimento-soprano'
 # Modo de depuração ligado para vermos os erros detalhados enquanto programamos
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['giovanirigotti.pythonanywhere.com', '127.0.0.1', 'localhost']
 
 # ==============================================================================
 # APLICATIVOS INSTALADOS
