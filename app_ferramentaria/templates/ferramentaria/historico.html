@@ -1,8 +1,534 @@
 {% extends 'ferramentaria/base.html' %}
 
 {% block content %}
-<div style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-    <h2 style="color: #1a3c5e; margin-bottom: 10px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: bold;">📋 Histórico de Ordens de Serviço</h2>
-    <p style="color: #666; font-style: italic; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">Esta página está em desenvolvimento e logo exibirá o histórico completo das intervenções e manutenções.</p>
+<style>
+    /* Layout de Grade Responsiva */
+    .hist-container { 
+        display: flex; 
+        gap: 20px; 
+        width: 100%; 
+        align-items: stretch; 
+        margin-top: 20px; 
+        box-sizing: border-box;
+    }/* Dashboards posicionados na Esquerda ocupando 60% (Peso 6 de 10) */
+    .hist-dash { 
+        flex: 5 !important; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 20px; 
+        min-width: 0; 
+    }
+    
+    /* Tabela de Histórico posicionada na Direita ocupando 40% (Peso 4 de 10) */
+    .hist-lista { 
+        flex: 5 !important; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 15px; 
+        min-width: 320px; 
+    }
+
+    /* Força os Gráficos a ocuparem 100% da tela quando "Todos" for selecionado */
+    .hist-full { 
+        flex: 100% !important; 
+        width: 100% !important; 
+    }
+    .hist-left { flex: 6.5; display: flex; flex-direction: column; gap: 15px; min-width: 0; }
+    .hist-right { flex: 3.5; display: flex; flex-direction: column; gap: 20px; min-width: 320px; }
+
+    /* Caixa Marrom de Registros */
+    .historico-box {
+        background-color: #9c8481;
+        border-radius: 8px;
+        padding: 20px;
+        color: #3b2826;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .historico-box h3 { font-size: 1.3rem; margin-bottom: 15px; color: white; text-align: left; font-weight: bold; }
+    
+    /* Cabeçalho Estilo Tabela */
+    .table-header {
+        display: flex;
+        font-size: 0.85rem;
+        font-weight: bold;
+        border-bottom: 2px solid rgba(0,0,0,0.2);
+        padding-bottom: 8px;
+        margin-bottom: 10px;
+        color: #2b1d1c;
+    }
+    .lista-historico { list-style: none; padding: 0; margin: 0; max-height: 550px; overflow-y: auto; }
+    
+    /* Linha de Registro Clicável */
+    .item-historico {
+        display: flex;
+        align-items: center;
+        padding: 12px 5px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 0.9rem;
+    }
+    .item-historico:hover { background-color: rgba(255,255,255,0.2); }
+
+    /* Divisão Rígida de Colunas */
+    .c-molde { flex: 0 0 15%; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .c-problemas { flex: 0 0 35%; padding-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .c-acoes { flex: 0 0 35%; padding-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; }
+    .c-data { flex: 0 0 15%; text-align: right; white-space: nowrap; font-weight: 500; }
+
+    /* Estilo dos Cards de Gráficos */
+    .card-chart {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        min-height: 280px;
+        display: flex;
+        flex-direction: column;
+    }
+    .card-chart h4 { border-bottom: 2px solid #f4eaeb; padding-bottom: 8px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.1rem; font-weight: bold; text-align: left; }
+    .chart-wrapper { position: relative; width: 100%; flex: 1; min-height: 200px; }
+
+    /* Badges de Status do Histórico */
+    .status-tag { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; color: white; margin-right: 5px; }
+    .st-concluido { background-color: #2b3a4a; }
+    .st-manutencao { background-color: #28a745; }
+    .st-aberto { background-color: #d9534f; }
+
+    /* ==========================================================================
+       🟢 ADICIONADO: ESTILOS DO MODAL FLUTUANTE (FIX PROTECTION)
+       ========================================================================== */
+    .modal-overlay {
+        display: none; /* 👈 CRÍTICO: Esconde a ficha por padrão */
+        position: fixed; 
+        top: 0; left: 0; 
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.6); /* Cria o fundo escurecido atrás */
+        z-index: 2000; /* Força ficar na frente de qualquer gráfico */
+        justify-content: center;
+        align-items: center;
+        box-sizing: border-box;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        width: 550px;
+        max-width: 90%;
+        position: relative;
+        max-height: 85vh; /* Evita que a ficha saia do monitor */
+        overflow-y: auto; /* Cria rolagem interna se o parecer for muito longo */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        box-sizing: border-box;
+    }
+
+    .modal-close { 
+        position: absolute; 
+        top: 10px; right: 15px; 
+        font-size: 1.5rem; 
+        cursor: pointer; 
+        color: #aaa; 
+    }
+    .modal-close:hover { color: #333; }
+    
+    /* Formatação dos labels e caixas de texto internas da ficha */
+    .modal-content .form-group { 
+        margin-bottom: 15px; 
+        text-align: left; 
+    }
+    .modal-content .form-group label { 
+        display: block; 
+        margin-bottom: 5px; 
+        font-weight: bold; 
+        color: #333; 
+        font-size: 0.9rem;
+    }
+    .modal-content .form-group textarea { 
+        width: 100%; 
+        padding: 8px; 
+        border: 1px solid #ccc; 
+        border-radius: 4px; 
+        box-sizing: border-box; 
+        resize: none; 
+        font-family: inherit;
+    }
+</style>
+
+<div style="padding: 10px 20px; box-sizing: border-box; width: 100%;">
+    
+    <div style="background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: 15px;">
+        <form method="GET" action="" style="display: flex; align-items: center; gap: 15px; margin: 0; width: 100%;">
+            <label style="color: #1a3c5e; font-weight: bold; font-size: 1.1rem; white-space: nowrap; margin: 0;">📚 Consultar Histórico:</label>
+            <select name="molde_filtro" onchange="this.form.submit()" style="width: 300px; padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; font-size: 1rem; font-weight: bold; color: #333;">
+                <option value="todos" {% if molde_filtro == 'todos' %}selected{% endif %}>🌍 TODOS (Apenas Dashboards Gerenciais)</option>
+                {% for m in lista_moldes %}
+                    <option value="{{ m.id }}" {% if molde_selecionado.id == m.id %}selected{% endif %}>{{ m.molde_nome }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div class="hist-container">
+        
+        <div class="{% if molde_filtro == 'todos' %}hist-full{% else %}hist-dash{% endif %}" style="display: flex; flex-direction: column; gap: 20px;">
+            
+            {% if molde_filtro == 'todos' %}
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; width: 100%;">
+                    
+                    <div class="card-chart">
+                        <h4>📊 Situação Atual das Demandas (Geral)</h4>
+                        <div class="chart-wrapper">
+                            <canvas id="chartStatus"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card-chart">
+                        <h4>📈 {{ titulo_top }}</h4>
+                        <div class="chart-wrapper">
+                            <canvas id="chartTopRankings"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card-chart">
+                        <h4>📉 Principais Defeitos Gerais da Fábrica</h4>
+                        <div class="chart-wrapper">
+                            <canvas id="chartDefeitosGerais"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+            {% else %}
+                <div class="card-chart">
+                    <h4>📊 Situação Atual das Demandas</h4>
+                    <div class="chart-wrapper">
+                        <canvas id="chartStatus"></canvas>
+                    </div>
+                </div>
+
+                <div class="card-chart">
+                    <h4>📈 {{ titulo_top }}</h4>
+                    <div class="chart-wrapper">
+                        <canvas id="chartTopRankings"></canvas>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        {% if molde_filtro != 'todos' %}
+        <div class="hist-lista">
+            <div class="historico-box">
+                <h3>Linha do Tempo de Manutenções: {{ molde_selecionado.molde_nome }}</h3>
+                <div class="table-header">
+                    <span class="c-molde">Status</span>
+                    <span class="c-problemas">Sintomas/Problemas</span>
+                    <span class="c-acoes">Ações Aplicadas</span>
+                    <span class="c-data">Movimentação</span>
+                </div>
+                <ul class="lista-historico">
+                    {% for os in solicitacoes %}
+                    <li class="item-historico"
+                        data-id="{{ os.id }}"
+                        data-molde="{{ os.molde.molde_nome }}"
+                        data-maquina="{{ os.maquina.maquina }}"
+                        data-operador="{{ os.operador.nome }}"
+                        data-op="{{ os.ordem_producao }}"
+                        data-dataop="{{ os.data_op|date:'d/m/Y' }}"
+                        data-status="{{ os.status }}"
+                        data-abertura="{{ os.data_abertura|date:'d/m/Y H:i' }}"
+                        data-fechamento="{{ os.data_fechamento|date:'d/m/Y H:i'|default:'Em andamento' }}"
+                        data-parecer-prod="{{ os.parecer_producao|default:'Nenhum parecer informado.' }}"
+                        data-parecer-ferr="{{ os.parecer_ferramentaria|default:'Nenhuma observação técnica registrada.' }}"
+                        data-problemas="{% for p in os.problemas.all %}{{ p.problema }}{% if not forloop.last %}, {% endif %}{% empty %}Relato Técnico{% endfor %}"
+                        data-acoes="{% for sa in os.solicitacaoacao_set.all %}{{ sa.acao.acao }}{% if not forloop.last %}, {% endif %}{% empty %}---{% endfor %}"
+                        
+                        data-ferramenteiro="{{ os.responsavel.nome|default:'Não designado' }}"
+                        data-ferramenteiro-id="{{ os.responsavel.id|default:'' }}"
+                        data-acoes-ids="{% for sa in os.solicitacaoacao_set.all %}{{ sa.acao.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                        
+                        onclick="verDetalhesFicha(this)">
+                        
+                        <span class="c-molde">
+                            {% if os.status == 'Concluído' %}<span class="status-tag st-concluido">CON</span>
+                            {% elif os.status == 'Em Manutenção' %}<span class="status-tag st-manutencao">MAN</span>
+                            {% else %}<span class="status-tag st-aberto">PEN</span>{% endif %}
+                        </span>
+                        
+                        <span class="c-problemas">{% for p in os.problemas.all %}{{ p.problema }}{% if not forloop.last %}, {% endif %}{% empty %}Relato Técnico{% endfor %}</span>
+                        
+                        <span class="c-acoes">
+                            {% for sa in os.solicitacaoacao_set.all %}{{ sa.acao.acao }}{% if not forloop.last %}, {% endif %}{% empty %}---{% endfor %}
+                        </span>
+                        
+                        <span class="c-data">{% if os.status == 'Concluído' %}{{ os.data_fechamento|date:"d/m/y H:i" }}{% else %}{{ os.data_abertura|date:"d/m/y H:i" }}{% endif %}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
 </div>
+
+<div class="modal-overlay" id="modalHistoricoFicha">
+    <div class="modal-content" style="width: 580px;">
+        <span class="modal-close" onclick="fecharModal('modalHistoricoFicha')">&times;</span>
+        
+        <form method="POST" action="" style="margin: 0; padding: 0; width: 100%;">
+            {% csrf_token %}
+            <input type="hidden" name="tipo_acao" value="registrar_manutencao">
+            <input type="hidden" name="os_id" id="h-id-input">
+
+            <h2 style="color: #1a3c5e; border-bottom: 2px solid #1a3c5e; padding-bottom: 5px; margin-bottom: 15px; font-weight: bold; font-size: 1.4rem;">
+                📋 Ficha de Manutenção nº <span id="h-id">--</span>
+            </h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #1a3c5e;">
+                <div><strong>Molde:</strong> <span id="h-molde">--</span></div>
+                <div><strong>Máquina Linha:</strong> <span id="h-maquina">--</span></div>
+                <div><strong>OP Produção:</strong> <span id="h-op">--</span> (<span id="h-dataop">--</span>)</div>
+                <div><strong>Operador:</strong> <span id="h-operador">--</span></div>
+                
+                <div style="grid-column: span 2; display: flex; align-items: center; gap: 5px; margin-top: 5px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                    <div id="h-status-view" style="width: 100%;"><strong>Status Atual:</strong> <span id="h-status" style="font-weight: bold; color: #1a3c5e;">--</span></div>
+                    <div id="h-status-edit" style="display: none; width: 100%; align-items: center; gap: 10px;">
+                        <label style="font-weight: bold; margin: 0; color: #1a3c5e; white-space: nowrap;">Alterar Status:</label>
+                        <select name="novo_status" id="h-status-select" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold;">
+                            <option value="Aberto">Aberto</option>
+                            <option value="Em Manutenção">Em Manutenção</option>
+                            <option value="Concluído">Concluído</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div style="font-size: 0.82rem; color: #666; margin-bottom: 15px; padding-left: 5px;">
+                📅 <strong>Abertura:</strong> <span id="h-abertura">--</span> | 🏁 <strong>Fechamento:</strong> <span id="h-fechamento">--</span>
+            </div>
+
+            <div class="form-group">
+                <label>Sintomas / Defeitos Detectados</label>
+                <div id="h-problemas" style="padding: 8px; background: #fdf2f2; border: 1px solid #f5c6cb; border-radius: 4px; color: #721c24; font-weight: bold; font-size: 0.9rem;">--</div>
+            </div>
+
+            <div class="form-group">
+                <label>Ferramenteiro Responsável</label>
+                <div id="h-ferramenteiro-view" style="padding: 8px; background: #fdfdfd; border: 1px solid #ddd; border-radius: 4px; font-weight: 500;">--</div>
+                <div id="h-ferramenteiro-edit" style="display: none;">
+                    <select name="responsavel_id" id="h-ferramenteiro-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 0.9rem;">
+                        <option value="">-- Selecione o Ferramenteiro Responsável --</option>
+                        {% for f in lista_ferramenteiros %}
+                            <option value="{{ f.id }}">{{ f.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Ações Técnicas Realizadas (Bancada)</label>
+                <div id="h-acoes-view" style="padding: 8px; background: #f3f9f4; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724; font-weight: bold; font-size: 0.9rem;">--</div>
+                <div id="h-acoes-edit" style="display: none; padding: 10px; background: white; border: 1px solid #ccc; border-radius: 4px; max-height: 120px; overflow-y: auto;">
+                    {% for acao in lista_acoes_manutencao %}
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <input type="checkbox" name="acoes_realizadas_ids" value="{{ acao.id }}" id="modal-chk-{{ acao.id }}" class="chk-acao-modal-historico">
+                            <label for="modal-chk-{{ acao.id }}" style="margin: 0; font-weight: normal; cursor: pointer; font-size: 0.88rem; color: #333;">{{ acao.acao }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Parecer do Chão de Fábrica (Produção)</label>
+                <textarea id="h-parecer-prod" rows="2" readonly style="background-color: #f1f1f1; font-style: italic; color: #555;"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Laudo Técnico da Bancada (Ferramentaria)</label>
+                <textarea id="h-parecer-ferr" name="parecer_ferramentaria" rows="2" style="font-family: inherit; font-size: 0.9rem; font-weight: 500;"></textarea>
+            </div>
+
+            <div id="h-botao-salvar-container" style="display: none; justify-content: flex-end; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                <button type="submit" style="background-color: #1a3c5e; color: white; border: none; padding: 10px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transition: background 0.2s;">
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <div id="dados-dashboard-json" 
+       data-status-labels='{{ labels_status|safe }}'
+        data-status-valores='{{ valores_status|safe }}'
+        data-top-labels='{{ labels_top|safe }}'
+        data-top-valores='{{ valores_top|safe }}'
+        data-defeitos-labels='{{ labels_defeitos_gerais|safe }}'
+        data-defeitos-valores='{{ valores_defeitos_gerais|safe }}'
+        style="display: none;">
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 🟢 FUNÇÃO DE INJEÇÃO E CHAVEAMENTO DINÂMICO DE CAMPOS (VIEW / EDIT)
+    function verDetalhesFicha(elemento) {
+        var idOS = elemento.getAttribute('data-id');
+        var status = elemento.getAttribute('data-status'); // Captura o status da OS (Aberto, Em Manutenção, Concluído)
+        
+        // Atribui os IDs obrigatórios de envio
+        document.getElementById('h-id-input').value = idOS;
+        document.getElementById('h-id').innerText = idOS;
+        
+        // Alimenta os dados de texto comuns das duas visões
+        document.getElementById('h-molde').innerText = elemento.getAttribute('data-molde');
+        document.getElementById('h-maquina').innerText = elemento.getAttribute('data-maquina');
+        document.getElementById('h-operador').innerText = elemento.getAttribute('data-operador');
+        document.getElementById('h-op').innerText = elemento.getAttribute('data-op');
+        document.getElementById('h-dataop').innerText = elemento.getAttribute('data-dataop');
+        document.getElementById('h-abertura').innerText = elemento.getAttribute('data-abertura');
+        document.getElementById('h-fechamento').innerText = elemento.getAttribute('data-fechamento');
+        document.getElementById('h-problemas').innerText = elemento.getAttribute('data-problemas');
+        document.getElementById('h-parecer-prod').value = elemento.getAttribute('data-parecer-prod');
+        document.getElementById('h-parecer-ferr').value = elemento.getAttribute('data-parecer-ferr');
+        
+        var txtLaudoFerramentaria = document.getElementById('h-parecer-ferr');
+
+        // ==========================================================================
+        // 🎛️ LÓGICA DE BLOQUEIO / ALTERAÇÃO DINÂMICA
+        // ==========================================================================
+        if (status === 'Concluído') {
+            // 🔒 MODO CONCLUÍDO (APENAS CONSULTA)
+            document.getElementById('h-status-view').style.display = 'block';
+            document.getElementById('h-status').innerText = 'CONCLUÍDO (Ficha Encerrada)';
+            document.getElementById('h-status-edit').style.display = 'none';
+
+            document.getElementById('h-ferramenteiro-view').style.display = 'block';
+            document.getElementById('h-ferramenteiro-view').innerText = elemento.getAttribute('data-ferramenteiro');
+            document.getElementById('h-ferramenteiro-edit').style.display = 'none';
+
+            document.getElementById('h-acoes-view').style.display = 'block';
+            document.getElementById('h-acoes-view').innerText = elemento.getAttribute('data-acoes');
+            document.getElementById('h-acoes-edit').style.display = 'none';
+
+            // Tranca a caixa de texto técnica
+            txtLaudoFerramentaria.readOnly = true;
+            txtLaudoFerramentaria.style.backgroundColor = '#f1f1f1';
+            txtLaudoFerramentaria.style.color = '#555';
+
+            // Oculta o botão de salvar alterações
+            document.getElementById('h-botao-salvar-container').style.display = 'none';
+        } else {
+            // 🔓 MODO ABERTO OU EM MANUTENÇÃO (PERMITE ALTERAR E SALVAR!)
+            document.getElementById('h-status-view').style.display = 'none';
+            document.getElementById('h-status-edit').style.display = 'flex';
+            document.getElementById('h-status-select').value = status;
+
+            document.getElementById('h-ferramenteiro-view').style.display = 'none';
+            document.getElementById('h-ferramenteiro-edit').style.display = 'block';
+            document.getElementById('h-ferramenteiro-select').value = elemento.getAttribute('data-ferramenteiro-id');
+
+            document.getElementById('h-acoes-view').style.display = 'none';
+            document.getElementById('h-acoes-edit').style.display = 'block';
+
+            // Reset inicial das caixas de marcação (Checkboxes)
+            document.querySelectorAll('.chk-acao-modal-historico').forEach(function(chk) {
+                chk.checked = false;
+            });
+
+            // Ativa os quadradinhos das ações técnicas que já estavam gravadas nessa OS
+            var acoesIdsStr = elemento.getAttribute('data-acoes-ids');
+            if (acoesIdsStr) {
+                var arrayIds = acoesIdsStr.split(',');
+                arrayIds.forEach(function(idAcao) {
+                    var chkBox = document.getElementById('modal-chk-' + idAcao);
+                    if (chkBox) chkBox.checked = true;
+                });
+            }
+
+            // Libera a caixa de digitação para o laudo técnico
+            txtLaudoFerramentaria.readOnly = false;
+            txtLaudoFerramentaria.style.backgroundColor = '#ffffff';
+            txtLaudoFerramentaria.style.color = '#1a3c5e';
+
+            // Faz aparecer o botão Salvar Alterações
+            document.getElementById('h-botao-salvar-container').style.display = 'flex';
+        }
+        abrirModal('modalHistoricoFicha');
+    }
+    function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
+    window.addEventListener('click', function(e) { if (e.target.classList.contains('modal-overlay')) e.target.style.display = 'none'; });
+    window.addEventListener('keydown', function(e) { if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); } });
+
+    var campoLaudo = document.getElementById('h-parecer-ferr');
+    
+    if (campoLaudo) {
+        // Quando o usuário clica ou seleciona a caixa de texto
+        campoLaudo.addEventListener('focus', function() {
+            if (this.value === 'Nenhuma observação técnica registrada.') {
+                this.value = ''; // Apaga o texto padrão para permitir a digitação limpa
+            }
+        });
+
+        // Opcional: Se o usuário clicar fora e não digitar nada, devolve o aviso padrão
+        campoLaudo.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.value = 'Nenhuma observação técnica registrada.';
+            }
+        });
+    }
+
+    // Coleta blindada de dados do DOM para evitar erros de sintaxe no VS Code
+    var containerDados = document.getElementById('dados-dashboard-json');
+    var labelsStatus = JSON.parse(containerDados.getAttribute('data-status-labels') || '[]');
+    var valoresStatus = JSON.parse(containerDados.getAttribute('data-status-valores') || '[]');
+    var labelsTop = JSON.parse(containerDados.getAttribute('data-top-labels') || '[]');
+    var valoresTop = JSON.parse(containerDados.getAttribute('data-top-valores') || '[]');
+    var labelsDefeitosGerais = JSON.parse(containerDados.getAttribute('data-defeitos-labels') || '[]');
+    var valoresDefeitosGerais = JSON.parse(containerDados.getAttribute('data-defeitos-valores') || '[]');
+
+    // RENDERS GRÁFICOS
+    var ctxStatus = document.getElementById('chartStatus').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: labelsStatus,
+            datasets: [{ data: valoresStatus, backgroundColor: ['#d9534f', '#2b3a4a', '#28a745', '#f0ad4e'], borderWidth: 1 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    var ctxTop = document.getElementById('chartTopRankings').getContext('2d');
+    new Chart(ctxTop, {
+        type: 'bar',
+        data: {
+            labels: labelsTop,
+            datasets: [{ label: 'Volume de Registros', data: valoresTop, backgroundColor: '#1a3c5e', borderRadius: 4 }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // 🟢 RENDERIZAÇÃO CONDICIONAL E SEGURA DO TERCEIRO GRÁFICO (EVITA ERROS QUANDO FOR MOLDE ÚNICO)
+    var canvasDefeitosGerais = document.getElementById('chartDefeitosGerais');
+    if (canvasDefeitosGerais) {
+        var ctxDefeitosGerais = canvasDefeitosGerais.getContext('2d');
+        new Chart(ctxDefeitosGerais, {
+            type: 'bar',
+            data: {
+                labels: labelsDefeitosGerais,
+                datasets: [{ label: 'Ocorrências Globais', data: valoresDefeitosGerais, backgroundColor: '#1a3c5e', borderRadius: 4 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+</script>
 {% endblock %}

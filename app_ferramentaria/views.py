@@ -170,25 +170,94 @@ def dashboard_view(request):
 # ==============================================================================
 # 2. TELA DE HISTÓRICO E REGISTROS
 # ==============================================================================
+# ==============================================================================
+# 2. TELA DE HISTÓRICO E REGISTROS (COM ATUALIZAÇÃO DIRETA VIA MODAL)
+# ==============================================================================
 def historico_view(request):
-    # Busca todas as ordens, ordenando pelas mais recentes primeiro
-    todas_solicitacoes = SolicitacaoManutencao.objects.all().order_by('-data_abertura')
-    
-    # Se o usuário usou o filtro na tela para buscar um molde específico
+    # 🟢 1. PROCESSA A GRAVAÇÃO SE O MODAL ENVIAR UM POST
+    if request.method == 'POST':
+        tipo_acao = request.POST.get('tipo_acao')
+        if tipo_acao == 'registrar_manutencao':
+            os_id = request.POST.get('os_id')
+            responsavel_id = request.POST.get('responsavel_id')
+            parecer_ferramentaria = request.POST.get('parecer_ferramentaria')
+            novo_status = request.POST.get('novo_status')
+            lista_acoes_ids = request.POST.getlist('acoes_realizadas_ids')
+            
+            # Validação idêntica à do Dashboard para segurança da ferramentaria
+            if novo_status == 'Concluído' and not lista_acoes_ids:
+                messages.error(
+                    request, 
+                    f"Erro ao salvar OS nº {os_id}: Para alterar o status para 'Concluído', é obrigatório selecionar pelo menos uma Ação Realizada!"
+                )
+                return redirect(request.get_full_path()) # Recarrega mantendo o molde filtrado na tela
+
+            # Executa a atualização na base através do service existente
+            SolicitacaoService.registrar_manutencao(
+                os_id=os_id,
+                responsavel_id=responsavel_id,
+                parecer_ferramentaria=parecer_ferramentaria,
+                novo_status=novo_status,
+                lista_acoes_ids=lista_acoes_ids
+            )
+            
+            messages.success(request, f"Ficha nº {os_id} atualizada com sucesso!")
+            return redirect(request.get_full_path()) # Recarrega na mesma página com os filtros preservados
+
+    # 2. CAPTURA DOS FILTROS DA TELA (GET NORMAL)
     molde_id = request.GET.get('molde_filtro')
-    if molde_id:
-        todas_solicitacoes = todas_solicitacoes.filter(molde__id=molde_id)
+    lista_moldes = Molde.objects.filter(status="Ativo")
+    
+    solicitacoes = []
+    molde_selecionado = None
+    labels_defeitos_gerais = []
+    valores_defeitos_gerais = []
+
+    if molde_id and molde_id != 'todos':
+        molde_selecionado = get_object_or_404(Molde, id=molde_id)
+        # Traz histórico estruturado com prefetch_related reverso para otimizar velocidade
+        solicitacoes = SolicitacaoManutencao.objects.filter(
+            molde=molde_selecionado
+        ).order_by('-id').prefetch_related('problemas', 'solicitacaoacao_set__acao')
         
-    lista_moldes = Molde.objects.filter(status__in=['Operação', 'Manutenção'])
+        status_data = SolicitacaoManutencao.objects.filter(molde=molde_selecionado).values('status').annotate(total=Count('id'))
+        top_data = Problema.objects.filter(solicitacaomanutencao__molde=molde_selecionado).annotate(total=Count('id')).order_by('-total')[:5]
+        titulo_top = "Principais Defeitos Deste Molde"
+        labels_top = [p.problema for p in top_data]
+        valores_top = [p.total for p in top_data]
+    else:
+        molde_id = 'todos'
+        status_data = SolicitacaoManutencao.objects.values('status').annotate(total=Count('id'))
+        top_data = Molde.objects.filter(solicitacaomanutencao__isnull=False).annotate(total=Count('solicitacaomanutencao')).order_by('-total')[:5]
+        titulo_top = "Top 5 Moldes com Mais Ocorrências"
+        labels_top = [m.molde_nome for m in top_data]
+        valores_top = [m.total for m in top_data]
+        
+        defeitos_gerais_data = Problema.objects.filter(solicitacaomanutencao__isnull=False).annotate(total=Count('id')).order_by('-total')[:5]
+        labels_defeitos_gerais = [p.problema for p in defeitos_gerais_data]
+        valores_defeitos_gerais = [p.total for p in defeitos_gerais_data]
+
+    labels_status = [item['status'] for item in status_data]
+    valores_status = [item['total'] for item in status_data]
 
     context = {
-        'solicitacoes': todas_solicitacoes,
-        'lista_moldes': lista_moldes, # Para preencher o selectbox de filtro
+        'solicitacoes': solicitacoes,
+        'lista_moldes': lista_moldes,
+        'molde_filtro': molde_id,
+        'molde_selecionado': molde_selecionado,
+        'labels_status': json.dumps(labels_status),
+        'valores_status': json.dumps(valores_status),
+        'labels_top': json.dumps(labels_top),
+        'valores_top': json.dumps(valores_top),
+        'titulo_top': titulo_top,
+        'labels_defeitos_gerais': json.dumps(labels_defeitos_gerais),
+        'valores_defeitos_gerais': json.dumps(valores_defeitos_gerais),
+        
+        # 🟢 NOVAS SELEÇÕES ENVIADAS PARA ALIMENTAR O MODO EDIÇÃO DO MODAL
+        'lista_ferramenteiros': Colaborador.objects.filter(status='Ativo', funcao__iexact='Ferramenteiro'),
+        'lista_acoes_manutencao': AcaoManutencao.objects.all().order_by('acao'),
     }
-    
     return render(request, 'ferramentaria/historico.html', context)
-
-
 # ==============================================================================
 # 3. TELA DE GERENCIAMENTO (CADASTRAR MOLDES, ETC)
 # ==============================================================================
@@ -380,4 +449,3 @@ def salvar_acao(request):
             
     return redirect('/gerenciamento/?aba=aba-acoes')
 
-    

@@ -1,4 +1,4 @@
-from .models import Molde, ItemPorMolde, Maquina, Colaborador, Problema, AcaoManutencao, SolicitacaoManutencao
+from .models import Molde, ItemPorMolde, Maquina, Colaborador, Problema, AcaoManutencao, SolicitacaoManutencao, SolicitacaoAcao
 from django.db import transaction  # type: ignore[reportMissingModuleSource]
 from django.utils import timezone
 
@@ -153,17 +153,33 @@ class SolicitacaoService:
     def registrar_manutencao(os_id, responsavel_id, parecer_ferramentaria, novo_status, lista_acoes_ids):
         # 1. Busca a Ordem de Serviço aberta que está sendo tratada
         os_obj = SolicitacaoManutencao.objects.get(id=os_id)
-        
+
         # 2. Atualiza os campos preenchidos pelo ferramenteiro
-        os_obj.responsavel_id = responsavel_id
+        os_obj.responsavel_id = responsavel_id if responsavel_id else None
         os_obj.parecer_ferramentaria = parecer_ferramentaria
         os_obj.status = novo_status  # Grava dinamicamente "Em Manutenção" ou "Concluído"
-        
-        # 3. Salva a alteração da linha do registro no banco SQLite
+
+        # Se o status estiver sendo alterado para Concluído, grava o carimbo de data/hora atual
+        if novo_status == 'Concluído':
+            from django.utils import timezone
+            os_obj.data_fechamento = timezone.now()
+
+        # 3. Salva a alteração da linha do registro principal no banco SQLite
         os_obj.save()
-        
-        # 4. Atualiza os vínculos ManyToMany das ações realizadas (se houver essa relação no model)
+
+        # ==========================================================================
+        # 🟢 4. CORREÇÃO DEFINITIVA: GRAVAÇÃO MANUAL NA TABELA INTERMEDIÁRIA
+        # ==========================================================================
+
+        # Passo A: Remove do banco qualquer ação que estivesse previamente vinculada a esta OS
+        SolicitacaoAcao.objects.filter(solicitacao=os_obj).delete()
+
+        # Passo B: Percorre a lista de IDs vindas do modal e cria as novas linhas uma a uma
         if lista_acoes_ids:
-            os_obj.acoes_realizadas.set(lista_acoes_ids) # Ajuste para o nome do campo ManyToMany do seu Model
-            
+            for acao_id in lista_acoes_ids:
+                if acao_id:  # Valida se o ID não é nulo ou vazio
+                    SolicitacaoAcao.objects.create(
+                        solicitacao=os_obj,
+                        acao_id=int(acao_id)
+                    )
            
