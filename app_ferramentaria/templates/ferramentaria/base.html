@@ -167,8 +167,61 @@
                 justify-content: space-between !important;
             }
         }
-        </style>
-    {% block extra_css %}{% endblock %}
+
+        /* ADICIONADO: ESTILOS PARA CAIXAS DE ALERTA */
+        .alert-container { 
+            position: fixed; /* Descola o aviso do fundo e faz ele flutuar */
+            left: 50%;
+            transform: translateX(-50%); /* Centraliza perfeitamente no meio da tela */
+            width: 90%; 
+            max-width: 450px;
+            z-index: 10000; /* Garante que ficará na frente de todos os gráficos */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none; /* Impede que o aviso bloqueie cliques atrás dele */
+            
+            /* Posição no PC: Abaixo do Cabeçalho + Menu (Aprox. 130px do topo) */
+            top: 130px;
+        }
+        .alert-box { 
+            padding: 15px 20px; 
+            color: white; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            font-size: 1rem;
+            text-align: center; /* Centralizado fica mais elegante flutuando */
+            box-shadow: 0 4px 15px rgba(14, 9, 9, 0.2);
+            /* Animação suave para quando o JavaScript mandar sumir */
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        .alert-box.error { background-color: #dc3545; }   /* Vermelho para Erros */
+        .alert-box.success { background-color: #28a745; } /* Verde para Sucesso */
+
+        @media (max-width: 768px) {
+            .alert-container {
+                /* No celular o menu está embaixo, então a notificação desce só o espaço do Cabeçalho */
+                top: 80px;
+            }
+        }
+    
+    
+</style>
+
+<!-- Adicionado alerta de mensagens flash para feedback do usuário (sucesso ou erro) -->
+{% block alert_messages %}
+{% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+            <div class="alert-box {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endblock alert_messages %}
+
+{% block extra_css %}{% endblock %}
 </head>
 <body>
 
@@ -179,15 +232,16 @@
         </div>
         
         <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 26px; font-weight: 800; letter-spacing: 1.5px; line-height: 1; margin: 0; padding: 0; white-space: nowrap;">
-            RFS
+            CRMF
         </div>
 
     </header>
 
+    <!-- Alterado titulos de elementos da navegação -->
     <nav class="nav-tabs-container">
-        <a href="{% url 'ferramentaria:dashboard' %}" class="nav-tab-link" id="nav-dash">📊 Dashboard</a>
-        <a href="{% url 'ferramentaria:historico' %}" class="nav-tab-link" id="nav-hist">📋 Histórico e OS</a>
-        <a href="{% url 'ferramentaria:gerenciamento' %}" class="nav-tab-link" id="nav-gerenc">⚙️ Gerenciamento</a>
+        <a href="{% url 'ferramentaria:dashboard' %}" class="nav-tab-link" id="nav-dash"> Home</a>
+        <a href="{% url 'ferramentaria:historico' %}" class="nav-tab-link" id="nav-hist"> Detalhes</a>
+        <a href="{% url 'ferramentaria:gerenciamento' %}" class="nav-tab-link" id="nav-gerenc"> Gerenciamento</a>
     </nav>
 
     <main class="content-area">
@@ -209,5 +263,25 @@
     </script>
 
     {% block extra_js %}{% endblock %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Procura todas as caixas de alerta na tela
+            const alertas = document.querySelectorAll('.alert-box');
+            
+            if (alertas.length > 0) {
+                // Configura o relógio para 2000 milissegundos (2 segundos)
+                setTimeout(() => {
+                    alertas.forEach(alerta => {
+                        // 1º Passo: Faz a caixa ficar transparente e subir um pouquinho (efeito visual)
+                        alerta.style.opacity = '0';
+                        alerta.style.transform = 'translateY(-20px)';
+                        
+                        // 2º Passo: Aguarda a animação acima terminar (500ms) e apaga o HTML da tela
+                        setTimeout(() => alerta.remove(), 500);
+                    });
+                }, 2000); 
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 {% extends 'ferramentaria/base.html' %}
-
+<!-- {% block alert_messages %}{% endblock %}  mantem amensagem alertar desativados -->
 {% block content %}
 <style>
     /* Layout de Grade Responsiva */
@@ -56,7 +56,16 @@
         margin-bottom: 10px;
         color: #2b1d1c;
     }
-    .lista-historico { list-style: none; padding: 0; margin: 0; max-height: 550px; overflow-y: auto; }
+    .lista-historico { list-style: none;
+            padding: 0;
+            margin: 0;
+            
+            /* NOVO: Limita a altura a aproximadamente 15 linhas e ativa a rolagem */
+            max-height: 650px; /* Cada linha tem cerca de 42px. 15 x 42 = ~630px */
+            overflow-y: auto;
+            
+            /* EXTRA: Lembra da trava de layout? Evita que a barra de rolagem desalinhe as colunas! */
+            scrollbar-gutter: stable;}
     
     /* Linha de Registro Clicável */
     .item-historico {
@@ -91,8 +100,8 @@
 
     /* Badges de Status do Histórico */
     .status-tag { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; color: white; margin-right: 5px; }
-    .st-concluido { background-color: #2b3a4a; }
-    .st-manutencao { background-color: #28a745; }
+    .st-concluido { background-color: #28a745; }
+    .st-manutencao { background-color: #2b3a4a; }
     .st-aberto { background-color: #d9534f; }
 
     /* ==========================================================================
@@ -161,7 +170,7 @@
         <form method="GET" action="" style="display: flex; align-items: center; gap: 15px; margin: 0; width: 100%;">
             <label style="color: #1a3c5e; font-weight: bold; font-size: 1.1rem; white-space: nowrap; margin: 0;">📚 Consultar Histórico:</label>
             <select name="molde_filtro" onchange="this.form.submit()" style="width: 300px; padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; font-size: 1rem; font-weight: bold; color: #333;">
-                <option value="todos" {% if molde_filtro == 'todos' %}selected{% endif %}>🌍 TODOS (Apenas Dashboards Gerenciais)</option>
+                <option value="todos" {% if molde_filtro == 'todos' %}selected{% endif %}>🌍 TODOS </option> <!-- modificado titulo -->
                 {% for m in lista_moldes %}
                     <option value="{{ m.id }}" {% if molde_selecionado.id == m.id %}selected{% endif %}>{{ m.molde_nome }}</option>
                 {% endfor %}
@@ -197,6 +206,14 @@
                         </div>
                     </div>
 
+                    <!-- NOVO GRAFICO -->
+                    <div class="card-chart">
+                        <h4>⏱️ Tempo Médio de Reparo (MTTR em Horas)</h4>
+                        <div class="chart-wrapper">
+                            <canvas id="chartMTTR"></canvas>
+                        </div>
+                    </div>
+
                 </div>
             {% else %}
                 <div class="card-chart">
@@ -210,6 +227,14 @@
                     <h4>📈 {{ titulo_top }}</h4>
                     <div class="chart-wrapper">
                         <canvas id="chartTopRankings"></canvas>
+                    </div>
+                </div>
+
+                <!-- NOVO GRAFICO -->
+                <div class="card-chart">
+                    <h4>⏱️ Tempo Médio de Reparo (MTTR em Horas)</h4>
+                    <div class="chart-wrapper">
+                        <canvas id="chartMTTR"></canvas>
                     </div>
                 </div>
             {% endif %}
@@ -513,14 +538,44 @@
 
     // RENDERS GRÁFICOS
     var ctxStatus = document.getElementById('chartStatus').getContext('2d');
-    new Chart(ctxStatus, {
-        type: 'doughnut',
-        data: {
-            labels: labelsStatus,
-            datasets: [{ data: valoresStatus, backgroundColor: ['#d9534f', '#2b3a4a', '#28a745', '#f0ad4e'], borderWidth: 1 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-    });
+    
+        if (ctxStatus) {
+            const labelsStatus = JSON.parse('{{ labels_status|safe }}');
+            const valoresStatus = JSON.parse('{{ valores_status|safe }}');
+
+            
+            const colorMapping = {
+                'Concluído': '#28a745',       // Azul Escuro Soprano (Igual à tag CON)
+                'Em Manutenção': '#1a3c5e',   // Verde (Igual à tag MAN)
+                'Aberto': '#dc3545',          // Vermelho (Igual à tag PEN)
+                
+            };
+
+            // O script olha para cada label que veio do Python e puxa a cor certa. 
+            // Se o status não existir no dicionário, ele usa um cinza padrão.
+            const backgroundColors = labelsStatus.map(label => colorMapping[label] || '#cccccc');
+
+            new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: labelsStatus,
+                    datasets: [{
+                        data: valoresStatus,
+                        backgroundColor: backgroundColors, // Injeta as cores mapeadas aqui!
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '50%',
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
 
     var ctxTop = document.getElementById('chartTopRankings').getContext('2d');
     new Chart(ctxTop, {
@@ -534,6 +589,57 @@
             maintainAspectRatio: false,
             scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
             plugins: { legend: { display: false } }
+        }
+    }) ;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        // ... seus gráficos existentes (chartStatus, chartTopRankings) ...
+
+        // 🟢 Variáveis do MTTR injetadas pelo Django
+        const labelsMttr = JSON.parse('{{ labels_mttr|safe }}');
+        const valoresMttr = JSON.parse('{{ valores_mttr|safe }}');
+
+        // Renderização do Gráfico MTTR
+        const ctxMTTR = document.getElementById('chartMTTR');
+        if(ctxMTTR) {
+            new Chart(ctxMTTR, {
+                type: 'line', // Gráfico de linha
+                data: {
+                    labels: labelsMttr,
+                    datasets: [{
+                        label: 'Média de Horas na Bancada',
+                        data: valoresMttr,
+                        borderColor: '#9c8481', // Cor da linha (Marrom da Soprano)
+                        backgroundColor: 'rgba(156, 132, 129, 0.2)', // Preenchimento suave
+                        borderWidth: 3,
+                        pointBackgroundColor: '#1a3c5e', // Pontos em Azul Escuro
+                        pointRadius: 5,
+                        fill: true, // Preenche a área debaixo da linha
+                        tension: 0.3 // Deixa a linha suave/curvada
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            title: { display: true, text: 'Horas (h)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + ' horas em média';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
     });
 
@@ -554,6 +660,8 @@
                 plugins: { legend: { display: false } }
             }
         });
+    
+    
     }
 </script>
 {% endblock %}

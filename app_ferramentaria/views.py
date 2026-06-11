@@ -3,10 +3,11 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.db.models import Count
+from django.db.models import Count, F, Avg
 from .models import ItemPorMolde, Molde, Maquina, Colaborador, Problema, SolicitacaoManutencao, AcaoManutencao
 from .services import MoldeService, ColaboradorService, SolicitacaoService # Importamos os serviços que criamos
 from django.views.decorators.csrf import csrf_protect
+from django.db.models.functions import ExtractMonth, ExtractYear
 
 # ==============================================================================
 # 1. TELA DE DASHBOARD
@@ -44,10 +45,13 @@ def dashboard_view(request):
     # Executa a contagem das Ordens de Serviço filtradas por data no banco
     total_abertas_periodo = SolicitacaoManutencao.objects.filter(
         data_abertura__range=[data_inicio, data_fim]
+    ).exclude(
+    status='Concluído'
     ).count()
-    
+        
     total_fechadas_periodo = SolicitacaoManutencao.objects.filter(
         data_fechamento__range=[data_inicio, data_fim],
+        status='Concluído'
     ).count()
 
 
@@ -90,7 +94,7 @@ def dashboard_view(request):
             # Captura a lista de checkboxes marcados
             lista_acoes_ids = request.POST.getlist('acoes_realizadas_ids')
             
-            # 🛑 VALIDAÇÃO DE SEGURANÇA REQUISITADA:
+            # VALIDAÇÃO DE SEGURANÇA REQUISITADA:
             # Se o status for "Concluído" e a lista de ações estiver vazia, cancela a operação
             if novo_status == 'Concluído' and not lista_acoes_ids:
                 messages.error(
@@ -198,7 +202,7 @@ def historico_view(request):
                 lista_acoes_ids=lista_acoes_ids
             )
             
-            messages.success(request, f"Ficha nº {os_id} atualizada com sucesso!")
+            #messages.success(request, f"Ficha nº {os_id} atualizada com sucesso!")
             return redirect(request.get_full_path()) # Recarrega na mesma página com os filtros preservados
 
     # 2. CAPTURA DOS FILTROS DA TELA (GET NORMAL)
@@ -223,6 +227,19 @@ def historico_view(request):
         titulo_top = "Principais Defeitos Deste Molde"
         labels_top = [p.problema for p in top_data]
         valores_top = [p.total for p in top_data]
+
+        # NOVO: Cálculo do MTTR (Tempo Médio de Reparo) por Mês para o Molde
+        mttr_data = SolicitacaoManutencao.objects.filter(
+            molde=molde_selecionado, 
+            status='Concluído',
+            data_fechamento__isnull=False
+        ).annotate(
+            mes=ExtractMonth('data_abertura'),
+            ano=ExtractYear('data_abertura'),
+            duracao=F('data_fechamento') - F('data_abertura')
+        ).values('ano', 'mes').annotate(
+            tempo_medio=Avg('duracao')
+        ).order_by('ano', 'mes')
     else:
         molde_id = 'todos'
         itens_molde = []
@@ -235,9 +252,32 @@ def historico_view(request):
         defeitos_gerais_data = Problema.objects.filter(solicitacaomanutencao__isnull=False).annotate(total=Count('id')).order_by('-total')[:5]
         labels_defeitos_gerais = [p.problema for p in defeitos_gerais_data]
         valores_defeitos_gerais = [p.total for p in defeitos_gerais_data]
+        # 🟢 NOVO: Cálculo do MTTR para Todos os Moldes
+        mttr_data = SolicitacaoManutencao.objects.filter(
+            status='Concluído',
+            data_fechamento__isnull=False
+        ).annotate(
+            mes=ExtractMonth('data_abertura'),
+            ano=ExtractYear('data_abertura'),
+            duracao=F('data_fechamento') - F('data_abertura')
+        ).values('ano', 'mes').annotate(
+            tempo_medio=Avg('duracao')
+        ).order_by('ano', 'mes')
 
     labels_status = [item['status'] for item in status_data]
     valores_status = [item['total'] for item in status_data]
+    
+    # 🟢 Preparar os dados do MTTR para o Chart.js
+    meses_nomes = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+    labels_mttr = []
+    valores_mttr = []
+
+    for item in mttr_data:
+        # Pega a média de tempo (Timedelta) e converte para Horas totais (Float)
+        if item['tempo_medio']:
+            horas = item['tempo_medio'].total_seconds() / 3600.0
+            labels_mttr.append(f"{meses_nomes[item['mes']]}/{str(item['ano'])[-2:]}")
+            valores_mttr.append(round(horas, 1))
 
     context = {
         'solicitacoes': solicitacoes,
@@ -252,9 +292,11 @@ def historico_view(request):
         'labels_defeitos_gerais': json.dumps(labels_defeitos_gerais),
         'valores_defeitos_gerais': json.dumps(valores_defeitos_gerais),
         'itens_molde': itens_molde,
-        # 🟢 NOVAS SELEÇÕES ENVIADAS PARA ALIMENTAR O MODO EDIÇÃO DO MODAL
         'lista_ferramenteiros': Colaborador.objects.filter(status='Ativo', funcao__iexact='Ferramenteiro'),
         'lista_acoes_manutencao': AcaoManutencao.objects.all().order_by('acao'),
+        # 🟢 NOVAS SELEÇÕES ENVIADAS PARA ALIMENTAR NOVO GRAFICO
+        'labels_mttr': json.dumps(labels_mttr),
+        'valores_mttr': json.dumps(valores_mttr),
     }
     return render(request, 'ferramentaria/historico.html', context)
 # ==============================================================================
