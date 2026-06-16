@@ -1,6 +1,14 @@
 import os
 from pathlib import Path
 
+SESSION_COOKIE_AGE = 600 
+
+# 2. Renova o tempo toda vez que o usuário clica em algo ou carrega uma página
+SESSION_SAVE_EVERY_REQUEST = True 
+
+# 3. Faz o logout automático se o usuário fechar o navegador no "X"
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
 # Constrói os caminhos relativos da sua pasta (Assim funciona em qualquer computador)
 BASE_DIR = Path(__file__).resolve().parent.parent
 

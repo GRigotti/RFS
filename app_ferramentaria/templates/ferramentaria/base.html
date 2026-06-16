@@ -36,25 +36,36 @@
            BARRA DE NAVEGAÇÃO POR ABAS HORIZONTAIS (ESTILO NAVBAR SUPERIOR)
            ========================================================================== */
         .nav-tabs-container {
-            background-color: #ffffff; /* Fundo branco para destacar as abas */
-            border-bottom: 1px solid #e9ecef;
             display: flex;
-            padding: 0 25px;
-            gap: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            align-items: center;
+            background-color: #ffffff; 
+            padding: 0 20px;
+            height: 50px;
+            border-bottom: 2px solid #e2e8f0; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .nav-tab-link {
             color: #1a3c5e;
             text-decoration: none;
-            padding: 14px 20px;
-            font-size: 16px;
+            padding: 0 20px; /* Ajustado para alinhar perfeitamente a barra azul */
+            font-size: 15px; /* Tamanho levemente ajustado para o menu superior */
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 8px;
-            border-bottom: 3px solid transparent; /* Linha inferior invisível por padrão */
+            border-bottom: 3px solid transparent; 
             transition: all 0.2s ease;
+            height: 100%; /* Garante que o link preencha a barra toda e a borda cole embaixo */
+            box-sizing: border-box; /* Impede que a borda empurre o menu */
+            
+            /* Resets caso o link seja um <button> (como no Sair) */
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            cursor: pointer;
+            font-family: inherit;
         }
 
         /* Efeito de passar o mouse por cima (Hover) */
@@ -64,6 +75,12 @@
             border-bottom: 3px solid #4a90e2;
         }
 
+        /* Empurra o formulário de logout para o final da direita */
+        .logout-form {
+            margin-left: auto;
+            height: 100%;
+            display: flex;
+        }
         /* Estilo para destacar visualmente a página em que o usuário está */
         .nav-tab-link.active-page {
             color: #1a3c5e;
@@ -239,9 +256,19 @@
 
     <!-- Alterado titulos de elementos da navegação -->
     <nav class="nav-tabs-container">
-        <a href="{% url 'ferramentaria:dashboard' %}" class="nav-tab-link" id="nav-dash"> Home</a>
-        <a href="{% url 'ferramentaria:historico' %}" class="nav-tab-link" id="nav-hist"> Detalhes</a>
-        <a href="{% url 'ferramentaria:gerenciamento' %}" class="nav-tab-link" id="nav-gerenc"> Gerenciamento</a>
+        <a href="{% url 'ferramentaria:dashboard' %}" class="nav-tab-link" id="nav-dash">📊 Dashboard</a>
+        <a href="{% url 'ferramentaria:historico' %}" class="nav-tab-link" id="nav-hist">📜 Histórico</a>
+
+        {% if request.user.is_staff or perms.app_ferramentaria.change_molde %}
+            <a href="{% url 'ferramentaria:gerenciamento' %}" class="nav-tab-link" id="nav-gerenc">⚙️ Gerenciamento</a>
+        {% endif %}
+
+        <form method="POST" action="{% url 'ferramentaria:logout' %}" class="logout-form">
+            {% csrf_token %}
+            <button type="submit" class="nav-tab-link" style="border:none; cursor:pointer;">
+                🚪 Sair ({{ request.user.username }})
+            </button>
+        </form>
     </nav>
 
     <main class="content-area">
@@ -282,6 +309,45 @@
                 }, 2000); 
             }
         });
+    </script>
+
+    <script>
+        // Configura o tempo limite de inatividade em milissegundos (Ex: 15 minutos = 900000 ms)
+        const tempoLimiteInatividade = 600000; 
+        let tempoOcioso;
+
+        function resetarTempo() {
+            // Se o usuário mexer o mouse ou digitar, zera o cronômetro
+            clearTimeout(tempoOcioso);
+            
+            // Inicia a contagem novamente
+            tempoOcioso = setTimeout(logoutAutomatico, tempoLimiteInatividade);
+        }
+
+        function logoutAutomatico() {
+            alert("Sessão encerrada por inatividade.");
+            
+            // Cria um formulário temporário para enviar o POST corretamente
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{% url 'ferramentaria:logout' %}";
+            
+            // Adiciona o token CSRF necessário
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = 'csrfmiddlewaretoken';
+            csrf.value = '{{ csrf_token }}';
+            
+            form.appendChild(csrf);
+            document.body.appendChild(form);
+            form.submit(); // Envia o formulário como POST, evitando o erro 405
+        }
+        // Monitora as ações do usuário na tela toda
+        window.onload = resetarTempo;
+        document.onmousemove = resetarTempo;
+        document.onkeypress = resetarTempo;
+        document.onclick = resetarTempo;
+        document.onscroll = resetarTempo;
     </script>
 </body>
 </html>

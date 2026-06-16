@@ -158,7 +158,7 @@
         background-color: #218838;
     }
     
-    /* Modais Fixados Absolutos na Janela (Independente do Flexbox do Base) */
+    /* Modais Fixados Absolutos na Janela */
     .modal-overlay {
         position: fixed;
         top: 0;
@@ -169,7 +169,7 @@
         display: none;
         align-items: center;
         justify-content: center;
-        z-index: 2000; /* Garante que fica por cima de cabeçalhos e sidebars */
+        z-index: 2000;
     }
     .modal-content {
         background: white;
@@ -214,7 +214,7 @@
     .alert-box.success { background-color: #28a745; }
 </style>
 
-    {% if messages %}
+   {% if messages %}
     <div class="alert-container">
         {% for message in messages %}
             <div class="alert-box {% if message.tags == 'error' %}error{% else %}success{% endif %}">
@@ -234,7 +234,7 @@
     </div>
 
     <div class="tab-container">
-        <button class="tab-btn active" onclick="openTab(event, 'aba-colaboradores')">Colaboradores</button>
+        <button class="tab-btn active" onclick="openTab(event, 'aba-usuarios')">Usuários e Acessos</button>
         <button class="tab-btn" onclick="openTab(event, 'aba-maquinas')">Máquinas</button>
         <button class="tab-btn" onclick="openTab(event, 'aba-moldes')">Moldes</button>
         <button class="tab-btn" onclick="openTab(event, 'aba-itens-molde')">Itens por Molde</button>
@@ -242,25 +242,55 @@
         <button class="tab-btn" onclick="openTab(event, 'aba-problemas')">Problemas</button>
     </div>
 
-    <div id="aba-colaboradores" class="tab-content active">
-        <button class="btn-general btn-add" onclick="openModalCadastro('modal-colaborador')">+ Novo Colaborador</button>
+    <div id="aba-usuarios" class="tab-content active">
+        <button class="btn-general btn-add" onclick="openModalCadastro('modal-usuario')">+ Novo Acesso</button>
+        
         <table>
             <thead>
                 <tr>
-                    <th>Nome</th>
-                    <th>Função</th>
+                    <th>Login</th>
+                    <th>Colaborador</th>
+                    <th>Função / Acesso</th>
                     <th>Status</th>
-                    <th>Ações</th>
+                    <th style="text-align: center;">Ações</th>
                 </tr>
             </thead>
             <tbody>
-                {% for c in colaboradores %}
-                <tr>
-                    <td>{{ c.nome }}</td>
-                    <td>{{ c.funcao }}</td>
-                    <td>{{ c.status }}</td>
+                {% for u in usuarios_sistema %}
+                <tr{% if not u.is_active %} style="background-color: #f8d7da;"{% endif %}>
+                    <td style="font-weight: bold;">{{ u.username }}</td>
                     <td>
-                        <button class="btn-general btn-edit" data-id="{{ c.id }}" data-nome="{{ c.nome }}" data-funcao="{{ c.funcao }}" data-status="{{ c.status }}" onclick="prepararEditarColaborador(this)">Editar</button>
+                        {% if u.colaborador %}
+                            {{ u.colaborador.nome }}
+                        {% else %}
+                            <span style="color: #999; font-style: italic;">Sem Vínculo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.colaborador %}
+                            {{ u.colaborador.funcao }}
+                        {% else %}
+                            {% if u.is_superuser %}Admin Master{% else %}Padrão{% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.is_active %}
+                            <span style="color: #28a745; font-weight: bold;">Ativo</span>
+                        {% else %}
+                            <span style="color: #dc3545; font-weight: bold;">Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        <form method="POST" action="{% url 'ferramentaria:salvar_usuario' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="tipo_acao" value="alternar_status_usuario">
+                            <input type="hidden" name="user_id" value="{{ u.id }}">
+                            {% if u.is_active %}
+                                <button type="submit" class="btn-general btn-edit" style="background-color: #dc3545; border: none; cursor: pointer;">🚫 Inativar</button>
+                            {% else %}
+                                <button type="submit" class="btn-general btn-edit" style="background-color: #28a745; border: none; cursor: pointer;">✅ Ativar</button>
+                            {% endif %}
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}
@@ -398,25 +428,31 @@
         </table>
     </div>
 
-    <div id="modal-colaborador" class="modal-overlay" onclick="fecharModalOuter(event)">
+    <div id="modal-usuario" class="modal-overlay" onclick="fecharModalOuter(event)">
         <div class="modal-content">
-            <span class="modal-close" onclick="fecharModal('modal-colaborador')">&times;</span>
-            <h3 id="titulo-modal-colaborador">Novo Colaborador</h3>
-            <form action="{% url 'ferramentaria:salvar_colaborador' %}" method="POST">
+            <span class="modal-close" onclick="fecharModal('modal-usuario')">&times;</span>
+            <h3 id="titulo-modal-usuario">Novo Acesso e Colaborador</h3>
+            <form action="{% url 'ferramentaria:salvar_usuario' %}" method="POST">
                 {% csrf_token %}
-                <input type="hidden" name="id" id="colab-id">
-                <label>Nome:</label><input type="text" name="nome" id="colab-nome" required>
-                <label>Função:</label>
-                <select name="funcao" id="colab-funcao">
-                    <option value="Operador">Operador</option>
-                    <option value="Ferramenteiro">Ferramenteiro</option>
-                </select>
-                <label>Status:</label>
-                <select name="status" id="colab-status">
-                    <option value="Ativo">Ativo</option>
-                    <option value="Inativo">Inativo</option>
+                <input type="hidden" name="tipo_acao" value="criar_usuario">
+                
+                <label>Nome Completo (Crachá):</label>
+                <input type="text" name="nome_completo" required placeholder="Ex: João da Silva">
+                
+                <label>Nome de Usuário (Login):</label>
+                <input type="text" name="username" required placeholder="Ex: joao.silva">
+                
+                <label>Senha Inicial:</label>
+                <input type="password" name="password" required>
+                
+                <label>Cargo / Nível de Acesso:</label>
+                <select name="grupo" required>
+                    <option value="Operador">Operador (Abre OS / Visualiza Dash)</option>
+                    <option value="Ferramenteiro">Ferramenteiro (Abre e Edita OS / Visualiza Dash)</option>
+                    <option value="Admin">Administrador (Acesso Total + Gerenciamento)</option>
                 </select><br><br>
-                <button type="submit" class="btn-general btn-submit">Salvar</button>
+                
+                <button type="submit" class="btn-general btn-submit">Salvar Acesso</button>
             </form>
         </div>
     </div>
@@ -505,7 +541,6 @@
             </form>
         </div>
     </div>
-
 <script>
     function openTab(evt, tabName) {
         let i, tabcontent, tablinks;
@@ -535,7 +570,7 @@
         
         let inputBusca = document.getElementById("input-busca");
         if (inputBusca) inputBusca.value = "";
-        let todasAsLinhas = document.querySelectorAll(".tab-content table tbody tr");
+        let todasAsLinhas = document.querySelectorAll(".tab-content.active table tbody tr");
         todasAsLinhas.forEach(linha => linha.style.display = "");
     }
 
@@ -545,10 +580,11 @@
         modal.style.display = "flex";
         let form = modal.querySelector("form");
         if (form) {
-            let inputs = form.querySelectorAll("input:not([name='csrfmiddlewaretoken']), select, textarea");
+            // 🟢 A CORREÇÃO ESTÁ AQUI: Adicionamos :not([name='tipo_acao']) para o JS não apagar nosso comando oculto!
+            let inputs = form.querySelectorAll("input:not([name='csrfmiddlewaretoken']):not([name='tipo_acao']), select, textarea");
             inputs.forEach(input => {
                 if (input.tagName === "SELECT") input.selectedIndex = 0;
-                else if (input.type === "hidden") input.value = "";
+                else if (input.type === "hidden") input.value = ""; // Agora ele limpa apenas os IDs de edição
                 else input.value = "";
             });
         }
@@ -556,15 +592,6 @@
         if (titulo && !titulo.innerText.includes("Novo")) {
             titulo.innerText = titulo.innerText.replace("Editar", "Novo");
         }
-    }
-
-    function prepararEditarColaborador(btn) {
-        document.getElementById('modal-colaborador').style.display = "flex";
-        document.getElementById('titulo-modal-colaborador').innerText = "Editar Colaborador";
-        document.getElementById('colab-id').value = btn.getAttribute('data-id');
-        document.getElementById('colab-nome').value = btn.getAttribute('data-nome');
-        document.getElementById('colab-funcao').value = btn.getAttribute('data-funcao');
-        document.getElementById('colab-status').value = btn.getAttribute('data-status');
     }
 
     function prepararEditarMaquina(btn) {
@@ -598,7 +625,6 @@
         document.getElementById('item-status').value = btn.getAttribute('data-status');
     }
 
-    // Corrigido para carregar os seletores corretos de Ação e Problema
     function prepararEditarAcao(btn) {
         document.getElementById('modal-acao').style.display = "flex";
         document.getElementById('titulo-modal-acao').innerText = "Editar Ação Técnica";

@@ -1,5 +1,6 @@
 from django.db import models  # type: ignore
 from django.utils import timezone  # type: ignore
+from django.contrib.auth.models import User
 
 class Molde(models.Model):
     # O Django já assume 'id' como primary key automaticamente se não especificarmos
@@ -37,10 +38,19 @@ class Maquina(models.Model):
         db_table = 'maquinas'
 
 class Colaborador(models.Model):
+    usuario = models.OneToOneField(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='colaborador' # Permite fazer a busca inversa: request.user.colaborador
+    )
     nome = models.CharField(max_length=100, db_column='nome')
     funcao = models.CharField(max_length=50, db_column='funcao')
     status = models.CharField(max_length=20, db_column='status')
 
+    def __str__(self):
+            return f"{self.nome} ({self.funcao})"
 
     class Meta:
         managed = False
@@ -101,3 +111,39 @@ class SolicitacaoAcao(models.Model):
     class Meta:
         managed = False
         db_table = 'solicitacao_acoes'
+
+class LogAuditoria(models.Model):
+    # Relaciona o log com o usuário que fez a alteração. 
+    # Se o usuário for deletado do sistema, o log continua guardado como "Nulo" para não perder o histórico.
+    usuario = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        verbose_name="Usuário"
+    )
+    
+    # Tipo da ação realizada (Ex: 'MOLDE_EDITADO', 'MAQUINA_EXCLUIDA', 'STATUS_ALTERADO')
+    acao = models.CharField(
+        max_length=50, 
+        verbose_name="Ação"
+    )
+    
+    # Texto detalhado explicando o que foi alterado
+    descricao = models.TextField(
+        verbose_name="Descrição da Alteração"
+    )
+    
+    # Grava automaticamente o dia e a hora exata em que o botão salvar foi clicado
+    data_hora = models.DateTimeField(
+        auto_now_add=True, 
+        verbose_name="Data e Hora"
+    )
+
+    class Meta:
+        db_table = 'logs_auditoria' # Define o nome da tabela física no banco
+        ordering = ['-data_hora']   # Garante que os logs mais recentes apareçam sempre primeiro
+
+    def __str__(self):
+        user_name = self.usuario.username if self.usuario else "Sistema"
+        return f"{user_name} - {self.acao} em {self.data_hora.strftime('%d/%m/%Y %H:%i')}"

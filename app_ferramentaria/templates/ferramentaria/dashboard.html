@@ -257,7 +257,7 @@
     .btn-submit { background-color: #28a745; color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold; }
     .btn-submit:hover { background-color: #218838; }
 
-    
+   
 
 </style>
 
@@ -524,13 +524,9 @@
                 <span><strong>Abertura:</strong> <span id="detalhe-data"></span></span>
             </div>
             <div style="margin-bottom: 4px;"><strong>Molde:</strong> <span id="detalhe-molde"></span></div>
-            <div style="margin-bottom: 4px;"><strong>Máquina Injetora:</strong> <span id="detalhe-maquina"></span></div>
+            <div style="margin-bottom: 4px;"><strong>Máquina:</strong> <span id="detalhe-maquina"></span></div>
             <div style="margin-bottom: 4px;"><strong>Operador:</strong> <span id="detalhe-operador"></span></div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                <!-- span><strong>OP:</strong> <span id="detalhe-op"></span></span>
-                <span><strong>Data OP:</strong> <span id="detalhe-dataop"></span></span-->
-                <span><strong>OM:</strong> <span id="detalhe-om"></span></span>
-            </div>
+            <div style="margin-bottom: 4px;"><strong>OM:</strong> <span id="detalhe-om"></span></div> 
             <div style="margin-bottom: 4px; color: #c9302c;"><strong>Problemas:</strong> <span id="detalhe-problemas" style="font-weight: bold;"></span></div>
             <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed #ccc; font-style: italic;">
                 <strong>Parecer Prod:</strong> <span id="detalhe-parecer-prod"></span>
@@ -543,8 +539,8 @@
             <input type="hidden" name="os_id" id="input-os-id">
             
             <div class="form-group">
-                <label>Responsável Técnico (Ferramenteiro)</label>
-                <select name="responsavel_id" required>
+                <label>Responsável Técnico</label>
+                <select name="responsavel_id" {% if not pode_editar %}disabled{% endif %} required>
                     <option value="">Selecione o Ferramenteiro...</option>
                     {% for ferram in lista_ferramenteiros %}
                         <option value="{{ ferram.id }}">{{ ferram.nome }}</option>
@@ -556,31 +552,33 @@
                 <label>AÇÕES REALIZADAS</label>
                 <div style="max-height: 110px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 4px; background-color: #fafafa;">
                     {% for acao in lista_acoes_manutencao %}
-                        <label class="checkbox-container-label" style="font-size: 0.9rem;">
-                            <input type="checkbox" name="acoes_realizadas_ids" value="{{ acao.id }}"> {{ acao.acao }}
+                        <label style="display:block; font-size: 0.9rem;">
+                            <input type="checkbox" name="acoes_realizadas_ids" value="{{ acao.id }}" {% if not pode_editar %}disabled{% endif %}> {{ acao.acao }}
                         </label>
-                    {% empty %}
-                        <span style="color: #777; font-size: 0.85rem;">Nenhuma ação cadastrada no banco.</span>
                     {% endfor %}
                 </div>
             </div>
 
             <div class="form-group">
-                <label>Parecer Técnico / Observações da Ferramentaria</label>
-                <textarea name="parecer_ferramentaria" rows="2" placeholder="Detalhes técnicos da intervenção realizada na ferramenta..."></textarea>
+                <label>Parecer Técnico / Observações</label>
+                <textarea name="parecer_ferramentaria" rows="2" {% if not pode_editar %}disabled{% endif %} placeholder="Detalhes técnicos..."></textarea>
             </div>
             
             <div class="form-group">
                 <label>Status do Atendimento</label>
-                <select name="novo_status" id="detalhe-status" required>
-                    <option value="Em Manutenção"> Em Manutenção</option>
-                    <option value="Concluído"> Concluído</option>
+                <select name="novo_status" id="detalhe-status" {% if not pode_editar %}disabled{% endif %} required>
+                    <option value="Em Manutenção">Em Manutenção</option>
+                    <option value="Concluído">Concluído</option>
                 </select>
             </div>
             
-            <button type="submit" class="btn-submit" style="background-color: #1a3c5e; margin-top: 10px;">
-                Registrar Manutenção
-            </button>
+            {% if pode_editar %}
+                <button type="submit" class="btn-submit" style="background-color: #1a3c5e; width: 100%; margin-top: 10px;">
+                    Registrar Manutenção
+                </button>
+            {% else %}
+                <p style="color: #777; text-align: center; margin-top: 10px;"><em>* Apenas ferramentaria pode alterar este status.</em></p>
+            {% endif %}
         </form>
     </div>
 </div>
@@ -619,7 +617,10 @@
         var statusAtual = elementoClicado.getAttribute('data-status');
         document.getElementById('detalhe-status').value = statusAtual || "Aberto";
 
-        abrirModal('modalDetalhesOS');
+        var modal = document.getElementById('modalDetalhesOS');
+        if (modal) {
+            modal.style.display = 'flex'; // Usamos flex pois o seu CSS deve usar flex no modal
+        }
     }
 
     // 1. Fecha o modal se o usuário clicar na área escura (fora do quadro branco)

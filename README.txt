@@ -24,3 +24,13 @@ modificado títulos "TODOS ( Apenas Dashboard Gerencias)" para "TODOS"
 Adicionado gráfico Mean Time to Repair - MTTR
 Ajustado cores dos rótulos aberto, manutenção e concluído.
 
+Versão 0.4.7
+
+Removido campos de Ordem de produção e data Op das solicitações.
+Adicionado campo Ordem de Manutenção.
+Limitado o numero de Solicitações abertas por molde para uma.
+
+Versão 0.5 
+
+Adicionado funções de login(usuários)
+Adicionado permissões para criação ou alteração de conteúdo

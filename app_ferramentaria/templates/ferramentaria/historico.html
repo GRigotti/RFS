@@ -162,6 +162,11 @@
         resize: none; 
         font-family: inherit;
     }
+
+    .acao-opaca {
+        opacity: 0.6;
+    }
+
 </style>
 
 <div style="padding: 10px 20px; box-sizing: border-box; width: 100%;">
@@ -342,9 +347,10 @@
                 
                 <div style="grid-column: span 2; display: flex; align-items: center; gap: 5px; margin-top: 5px; border-top: 1px dashed #ccc; padding-top: 5px;">
                     <div id="h-status-view" style="width: 100%;"><strong>Status Atual:</strong> <span id="h-status" style="font-weight: bold; color: #1a3c5e;">--</span></div>
+                    
                     <div id="h-status-edit" style="display: none; width: 100%; align-items: center; gap: 10px;">
                         <label style="font-weight: bold; margin: 0; color: #1a3c5e; white-space: nowrap;">Alterar Status:</label>
-                        <select name="novo_status" id="h-status-select" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold;">
+                        <select name="novo_status" id="h-status-select" {% if not pode_editar %}disabled{% endif %} style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold;">
                             <option value="Aberto">Aberto</option>
                             <option value="Em Manutenção">Em Manutenção</option>
                             <option value="Concluído">Concluído</option>
@@ -366,7 +372,7 @@
                 <label>Ferramenteiro Responsável</label>
                 <div id="h-ferramenteiro-view" style="padding: 8px; background: #fdfdfd; border: 1px solid #ddd; border-radius: 4px; font-weight: 500;">--</div>
                 <div id="h-ferramenteiro-edit" style="display: none;">
-                    <select name="responsavel_id" id="h-ferramenteiro-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 0.9rem;">
+                    <select name="responsavel_id" id="h-ferramenteiro-select" {% if not pode_editar %}disabled{% endif %} style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 0.9rem;">
                         <option value="">-- Selecione o Ferramenteiro Responsável --</option>
                         {% for f in lista_ferramenteiros %}
                             <option value="{{ f.id }}">{{ f.nome }}</option>
@@ -378,10 +384,11 @@
             <div class="form-group">
                 <label>Ações Técnicas Realizadas (Bancada)</label>
                 <div id="h-acoes-view" style="padding: 8px; background: #f3f9f4; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724; font-weight: bold; font-size: 0.9rem;">--</div>
+                
                 <div id="h-acoes-edit" style="display: none; padding: 10px; background: white; border: 1px solid #ccc; border-radius: 4px; max-height: 120px; overflow-y: auto;">
                     {% for acao in lista_acoes_manutencao %}
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                            <input type="checkbox" name="acoes_realizadas_ids" value="{{ acao.id }}" id="modal-chk-{{ acao.id }}" class="chk-acao-modal-historico">
+                        <div class="{% if not pode_editar %}acao-opaca{% endif %}" style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <input type="checkbox" name="acoes_realizadas_ids" value="{{ acao.id }}" id="modal-chk-{{ acao.id }}" class="chk-acao-modal-historico" {% if not pode_editar %}disabled{% endif %}>
                             <label for="modal-chk-{{ acao.id }}" style="margin: 0; font-weight: normal; cursor: pointer; font-size: 0.88rem; color: #333;">{{ acao.acao }}</label>
                         </div>
                     {% endfor %}
@@ -390,18 +397,24 @@
 
             <div class="form-group">
                 <label>Parecer do Chão de Fábrica (Produção)</label>
-                <textarea id="h-parecer-prod" rows="2" readonly style="background-color: #f1f1f1; font-style: italic; color: #555;"></textarea>
+                <textarea id="h-parecer-prod" rows="2" readonly style="background-color: #f1f1f1; font-style: italic; color: #555; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
             </div>
 
             <div class="form-group">
                 <label>Laudo Técnico da Bancada (Ferramentaria)</label>
-                <textarea id="h-parecer-ferr" name="parecer_ferramentaria" rows="2" style="font-family: inherit; font-size: 0.9rem; font-weight: 500;"></textarea>
+                <textarea id="h-parecer-ferr" name="parecer_ferramentaria" rows="2" {% if not pode_editar %}disabled{% endif %} style="font-family: inherit; font-size: 0.9rem; font-weight: 500; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
             </div>
 
-            <div id="h-botao-salvar-container" style="display: none; justify-content: flex-end; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                <button type="submit" style="background-color: #1a3c5e; color: white; border: none; padding: 10px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transition: background 0.2s;">
-                    Salvar Alterações
-                </button>
+            <div id="h-botao-salvar-container" style="display: none; justify-content: flex-end; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; width: 100%;">
+                {% if pode_editar %}
+                    <button type="submit" style="background-color: #1a3c5e; color: white; border: none; padding: 10px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transition: background 0.2s;">
+                        Salvar Alterações
+                    </button>
+                {% else %}
+                    <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; text-align: center; font-weight: bold; border: 1px solid #f5c6cb; width: 100%; box-sizing: border-box;">
+                        🔒 Modo de Visualização: Apenas a Ferramentaria pode alterar esta ficha.
+                    </div>
+                {% endif %}
             </div>
         </form>
     </div>

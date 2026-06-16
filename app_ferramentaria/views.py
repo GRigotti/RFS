@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timedelta
+from urllib import request
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -8,10 +9,17 @@ from .models import ItemPorMolde, Molde, Maquina, Colaborador, Problema, Solicit
 from .services import MoldeService, ColaboradorService, SolicitacaoService # Importamos os serviços que criamos
 from django.views.decorators.csrf import csrf_protect
 from django.db.models.functions import ExtractMonth, ExtractYear
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
+from django.contrib.auth.models import User, Group
+from .models import LogAuditoria
+import traceback
 
 # ==============================================================================
 # 1. TELA DE DASHBOARD
 # ==============================================================================
+@never_cache
+@login_required(login_url='ferramentaria:login')
 def dashboard_view(request):
 
     # ==========================================================================
@@ -19,7 +27,7 @@ def dashboard_view(request):
     # ==========================================================================
     data_fim_padrao = timezone.now()
     data_inicio_padrao = data_fim_padrao - timedelta(days=30)
-    
+    is_ferramenteiro_ou_admin = request.user.groups.filter(name__in=['Ferramenteiro', 'Admin']).exists()
     # Captura as datas vindas da URL (via método GET do formulário)
     data_inicio_str = request.GET.get('data_inicio')
     data_fim_str = request.GET.get('data_fim')
@@ -59,7 +67,7 @@ def dashboard_view(request):
     # SE O USUÁRIO CLICOU EM "SALVAR" NO MODAL
     if request.method == 'POST':
         tipo_acao = request.POST.get('tipo_acao')
-        
+
         if tipo_acao == 'nova_solicitacao':
             # 1. Puxa todos os dados do formulário HTML
             molde_id = request.POST.get('molde_id')
@@ -103,6 +111,9 @@ def dashboard_view(request):
             return redirect('ferramentaria:dashboard')
         
         elif tipo_acao == 'registrar_manutencao':
+            if not is_ferramenteiro_ou_admin:
+                return redirect('ferramentaria:dashboard')
+            
             os_id = request.POST.get('os_id')
             responsavel_id = request.POST.get('responsavel_id')
             parecer_ferramentaria = request.POST.get('parecer_ferramentaria')
@@ -184,6 +195,8 @@ def dashboard_view(request):
         'total_fechadas_periodo': total_fechadas_periodo,
         'data_inicio_filtro': data_inicio_str,
         'data_fim_filtro': data_fim_str,
+
+        'pode_editar': is_ferramenteiro_ou_admin,
     }
     
     return render(request, 'ferramentaria/dashboard.html', context)
@@ -191,10 +204,16 @@ def dashboard_view(request):
 # ==============================================================================
 # 2. TELA DE HISTÓRICO E REGISTROS 
 # ==============================================================================
+@never_cache
+@login_required(login_url='ferramentaria:login')
 def historico_view(request):
+
+    is_ferramenteiro_ou_admin = request.user.groups.filter(name__in=['Ferramenteiro', 'Admin']).exists()
+    
     # 🟢 1. PROCESSA A GRAVAÇÃO SE O MODAL ENVIAR UM POST
     if request.method == 'POST':
         tipo_acao = request.POST.get('tipo_acao')
+        
         if tipo_acao == 'registrar_manutencao':
             os_id = request.POST.get('os_id')
             responsavel_id = request.POST.get('responsavel_id')
@@ -314,22 +333,37 @@ def historico_view(request):
         # 🟢 NOVAS SELEÇÕES ENVIADAS PARA ALIMENTAR NOVO GRAFICO
         'labels_mttr': json.dumps(labels_mttr),
         'valores_mttr': json.dumps(valores_mttr),
+        'pode_editar': is_ferramenteiro_ou_admin,
     }
     return render(request, 'ferramentaria/historico.html', context)
+
 # ==============================================================================
 # 3. TELA DE GERENCIAMENTO (CADASTRAR MOLDES, ETC)
 # ==============================================================================
-
-
-@csrf_protect # ISTO FORÇA O DJANGO A GERAR O TOKEN PARA ESTA TELA
+@never_cache
+@login_required(login_url='ferramentaria:login')
+@csrf_protect
 def gerenciamento_view(request):
+    is_admin = (
+        request.user.is_superuser or 
+        request.user.is_staff or 
+        request.user.has_perm('app_ferramentaria.change_molde') or
+        request.user.groups.filter(name='Admin').exists()
+    )
+    if not is_admin:
+        messages.error(request, '❌ Acesso negado: Você não tem permissão para acessar o Gerenciamento.')
+        return redirect('ferramentaria:dashboard')
+    
     context = {
         'colaboradores': Colaborador.objects.all().order_by('nome'),
-        'maquinas': Maquina.objects.all().order_by('maquina'), # Ordenado pelo campo correto
+        'maquinas': Maquina.objects.all().order_by('maquina'),
         'acoes': AcaoManutencao.objects.all().order_by('acao'),
-        'moldes': Molde.objects.all().order_by('molde_nome'), # Ordenado pelo campo correto
+        'moldes': Molde.objects.all().order_by('molde_nome'),
         'itens_molde': ItemPorMolde.objects.all().order_by('item_codigo'),
         'problemas': Problema.objects.all().order_by('problema'),
+        
+        # 🟢 ADICIONADO: Mandando a lista de usuários para a tabela da tela
+        'usuarios_sistema': User.objects.all().order_by('username'),
     }
     return render(request, 'ferramentaria/gerenciamento.html', context)
 
@@ -507,3 +541,51 @@ def salvar_acao(request):
             
     return redirect('/gerenciamento/?aba=aba-acoes')
 
+def salvar_usuario(request):
+    if request.method == 'POST':
+        tipo_acao = request.POST.get('tipo_acao')
+        print(f"🎯 [LOG] Ação solicitada pelo form: {tipo_acao}")
+
+        # 🟢 AÇÃO: CRIAR USUÁRIO E COLABORADOR
+        if tipo_acao == 'criar_usuario':
+            try:
+                nome_completo = request.POST.get('nome_completo', '').strip()
+                username_novo = request.POST.get('username', '').strip()
+                password_nova = request.POST.get('password', '')
+                nome_grupo = request.POST.get('grupo', '')
+
+                if User.objects.filter(username=username_novo).exists():
+                    messages.error(request, f'❌ O login "{username_novo}" já está em uso.')
+                else:
+                    novo_user = User.objects.create_user(username=username_novo, password=password_nova)
+                    if nome_grupo == 'Admin':
+                        novo_user.is_staff = True
+                        novo_user.save()
+
+                    grupo, _ = Group.objects.get_or_create(name=nome_grupo)
+                    novo_user.groups.add(grupo)
+
+                    Colaborador.objects.create(
+                        usuario=novo_user,
+                        nome=nome_completo,
+                        funcao=nome_grupo,
+                        status='Ativo'
+                    )
+                    messages.success(request, f'✅ Usuário "{nome_completo}" cadastrado!')
+
+            except Exception as e:
+                print(traceback.format_exc())
+                messages.error(request, f'Erro interno: {str(e)}')
+
+        # 🟢 AÇÃO: ALTERAR STATUS
+        elif tipo_acao == 'alternar_status_usuario':
+            user_id = request.POST.get('user_id')
+            user_alvo = User.objects.get(id=user_id)
+            if user_alvo == request.user:
+                messages.error(request, '❌ Você não pode inativar a si mesmo.')
+            else:
+                user_alvo.is_active = not user_alvo.is_active
+                user_alvo.save()
+                messages.success(request, 'Status do usuário modificado!')
+                
+    return redirect('/gerenciamento/?aba=aba-usuarios')
