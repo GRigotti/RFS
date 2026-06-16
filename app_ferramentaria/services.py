@@ -128,7 +128,7 @@ class SolicitacaoService:
     
     @staticmethod
     @transaction.atomic
-    def abrir_solicitacao(molde_id, maquina_id, operador_id, ordem_producao, parecer_producao, lista_problemas_ids=None):
+    def abrir_solicitacao(molde_id, maquina_id, operador_id, ordem_manutencao, parecer_producao, lista_problemas_ids=None):
         """
         Cria uma nova OS. Usado pelo modal 'Nova Solicitação'.
         """
@@ -137,7 +137,8 @@ class SolicitacaoService:
             molde_id=molde_id,  # O Django entende o sufixo _id para ForeignKeys
             maquina_id=maquina_id,
             operador_id=operador_id,
-            ordem_producao=ordem_producao,
+            # ordem_producao=ordem_producao,
+            ordem_manutencao=ordem_manutencao,
             parecer_producao=parecer_producao,
             status='Aberto'
         )

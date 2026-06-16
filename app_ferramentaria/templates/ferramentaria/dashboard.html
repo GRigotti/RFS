@@ -396,8 +396,9 @@
                     data-data="{{ os.data_abertura|date:'d/m/Y H:i' }}"
                     data-maquina="{{ os.maquina.maquina }}"
                     data-operador="{{ os.operador.nome }}"
-                    data-op="{{ os.ordem_producao }}"
-                    data-dataop="{{ os.data_op|date:'d/m/Y' }}"
+                    
+                    data-OM="{{ os.ordem_manutencao }}"
+                   
                     data-parecer-prod="{{ os.parecer_producao|default:'Nenhum parecer informado.' }}"
                     data-problemas="{% for prob in os.problemas.all %}{{ prob.problema }}{% if not forloop.last %}, {% endif %}{% empty %}Relato textual{% endfor %}"
                     data-status="{{ os.status }}"
@@ -471,7 +472,7 @@
                 </select>
             </div>
 
-            <div class="form-group">
+           <!-- <div class="form-group">
                 <label>Ordem de Produção (OP)</label>
                 <input type="text" name="ordem_producao" placeholder="Ex: OP-54321" required>
             </div>
@@ -480,7 +481,14 @@
                 <label>Data da OP</label>
                 <input type="date" name="data_op" required>
             </div>
-            
+        -->
+            <div class="form-group">
+                <label >Ordem de Manutenção</label>
+                <input type="text" id="ordem_manutencao" name="ordem_manutencao" 
+                    placeholder="Ex: OM-2026-001" 
+                    style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+            </div>
+
             <div class="form-group">
                 <label>Problemas Identificados</label>
                 <div style="max-height: 100px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 4px; background-color: #f9f9f9;">
@@ -519,8 +527,9 @@
             <div style="margin-bottom: 4px;"><strong>Máquina Injetora:</strong> <span id="detalhe-maquina"></span></div>
             <div style="margin-bottom: 4px;"><strong>Operador:</strong> <span id="detalhe-operador"></span></div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                <span><strong>OP:</strong> <span id="detalhe-op"></span></span>
-                <span><strong>Data OP:</strong> <span id="detalhe-dataop"></span></span>
+                <!-- span><strong>OP:</strong> <span id="detalhe-op"></span></span>
+                <span><strong>Data OP:</strong> <span id="detalhe-dataop"></span></span-->
+                <span><strong>OM:</strong> <span id="detalhe-om"></span></span>
             </div>
             <div style="margin-bottom: 4px; color: #c9302c;"><strong>Problemas:</strong> <span id="detalhe-problemas" style="font-weight: bold;"></span></div>
             <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed #ccc; font-style: italic;">
@@ -587,8 +596,9 @@
         var data = elementoClicado.getAttribute('data-data');
         var maquina = elementoClicado.getAttribute('data-maquina');
         var operador = elementoClicado.getAttribute('data-operador');
-        var op = elementoClicado.getAttribute('data-op');
-        var dataop = elementoClicado.getAttribute('data-dataop');
+        var dataom = elementoClicado.getAttribute('data-OM');
+        //var op = elementoClicado.getAttribute('data-op');
+        //var dataop = elementoClicado.getAttribute('data-dataop');
         var problemas = elementoClicado.getAttribute('data-problemas');
         var parecerProd = elementoClicado.getAttribute('data-parecer-prod');
 
@@ -598,8 +608,9 @@
         document.getElementById('detalhe-data').innerText = data;
         document.getElementById('detalhe-maquina').innerText = maquina;
         document.getElementById('detalhe-operador').innerText = operador;
-        document.getElementById('detalhe-op').innerText = op;
-        document.getElementById('detalhe-dataop').innerText = dataop;
+        document.getElementById('detalhe-om').innerText = dataom;
+        //document.getElementById('detalhe-op').innerText = op;
+        //document.getElementById('detalhe-dataop').innerText = dataop;
         document.getElementById('detalhe-problemas').innerText = problemas;
         document.getElementById('detalhe-parecer-prod').innerText = parecerProd;
         

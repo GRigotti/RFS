@@ -66,12 +66,13 @@ class SolicitacaoManutencao(models.Model):
     operador = models.ForeignKey(Colaborador, on_delete=models.DO_NOTHING, db_column='id_operador', related_name='abertas_por')
     responsavel = models.ForeignKey(Colaborador, on_delete=models.DO_NOTHING, db_column='id_responsavel', null=True, related_name='resolvidas_por')
     
-    ordem_producao = models.CharField(max_length=50, db_column='ordem_producao')
+    ordem_manutencao = models.CharField(max_length=50, db_column='ordem_manutencao', blank=True, null=True)
+    ordem_producao = models.CharField(max_length=50, db_column='ordem_producao', blank=True, null=True)
     parecer_producao = models.TextField(db_column='parecer_producao')
     parecer_ferramentaria = models.TextField(db_column='parecer_ferramentaria', null=True)
     status = models.CharField(max_length=20, db_column='status', default='Aberto')
     
-    data_op = models.DateTimeField(db_column='data_op', null=True)
+    data_op = models.DateTimeField(db_column='data_op', blank=True, null=True)
     data_abertura = models.DateTimeField(db_column='data_abertura', default=timezone.now)
     data_fechamento = models.DateTimeField(db_column='data_fechamento', null=True)
     ultima_alteracao = models.DateTimeField(db_column='ultima_alteracao', auto_now=True)

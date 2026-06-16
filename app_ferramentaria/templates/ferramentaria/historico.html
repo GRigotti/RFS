@@ -282,8 +282,8 @@
                         data-molde="{{ os.molde.molde_nome }}"
                         data-maquina="{{ os.maquina.maquina }}"
                         data-operador="{{ os.operador.nome }}"
-                        data-op="{{ os.ordem_producao }}"
-                        data-dataop="{{ os.data_op|date:'d/m/Y' }}"
+                        data-OM="{{ os.ordem_manutencao }}"
+                        
                         data-status="{{ os.status }}"
                         data-abertura="{{ os.data_abertura|date:'d/m/Y H:i' }}"
                         data-fechamento="{{ os.data_fechamento|date:'d/m/Y H:i'|default:'Em andamento' }}"
@@ -337,7 +337,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #1a3c5e;">
                 <div><strong>Molde:</strong> <span id="h-molde">--</span></div>
                 <div><strong>Máquina Linha:</strong> <span id="h-maquina">--</span></div>
-                <div><strong>OP Produção:</strong> <span id="h-op">--</span> (<span id="h-dataop">--</span>)</div>
+                <div><strong>Ordem de Manutenção:</strong> <span id="h-op">--</span> </div>
                 <div><strong>Operador:</strong> <span id="h-operador">--</span></div>
                 
                 <div style="grid-column: span 2; display: flex; align-items: center; gap: 5px; margin-top: 5px; border-top: 1px dashed #ccc; padding-top: 5px;">
@@ -432,8 +432,9 @@
         document.getElementById('h-molde').innerText = elemento.getAttribute('data-molde');
         document.getElementById('h-maquina').innerText = elemento.getAttribute('data-maquina');
         document.getElementById('h-operador').innerText = elemento.getAttribute('data-operador');
-        document.getElementById('h-op').innerText = elemento.getAttribute('data-op');
-        document.getElementById('h-dataop').innerText = elemento.getAttribute('data-dataop');
+        document.getElementById('h-op').innerText = elemento.getAttribute('data-OM');
+        //document.getElementById('h-op').innerText = elemento.getAttribute('data-op');
+        //document.getElementById('h-dataop').innerText = elemento.getAttribute('data-dataop');
         document.getElementById('h-abertura').innerText = elemento.getAttribute('data-abertura');
         document.getElementById('h-fechamento').innerText = elemento.getAttribute('data-fechamento');
         document.getElementById('h-problemas').innerText = elemento.getAttribute('data-problemas');

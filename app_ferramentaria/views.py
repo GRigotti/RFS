@@ -63,10 +63,26 @@ def dashboard_view(request):
         if tipo_acao == 'nova_solicitacao':
             # 1. Puxa todos os dados do formulário HTML
             molde_id = request.POST.get('molde_id')
+
+            os_aberta = SolicitacaoManutencao.objects.filter(
+                molde_id=molde_id
+            ).exclude(status='Concluído').exists()
+
+            if os_aberta:
+                # Dispara a notificação de erro que aparecerá no toast flutuante
+                messages.error(request, '⚠️ Operação cancelada: Este molde já possui uma manutenção em andamento!')
+                
+                # Interrompe a execução e recarrega a página atual
+                # Substitua 'ferramentaria:dashboard' pelo nome correto da sua url se for diferente
+                return redirect(request.META.get('HTTP_REFERER', '/')) 
+            # ================================================================
+
+
             maquina_id = request.POST.get('maquina_id')
             operador_id = request.POST.get('operador_id')
-            ordem_producao = request.POST.get('ordem_producao')
-            data_op = request.POST.get('data_op') 
+            # ordem_producao = request.POST.get('ordem_producao')
+            # data_op = request.POST.get('data_op')
+            ordem_manutencao = request.POST.get('ordem_manutencao') 
             parecer_producao = request.POST.get('parecer_producao')
             
             # .getlist() captura todos os quadradinhos (checkbox) marcados
@@ -77,7 +93,8 @@ def dashboard_view(request):
                 molde_id=molde_id,
                 maquina_id=maquina_id,
                 operador_id=operador_id,
-                ordem_producao=ordem_producao,
+                #ordem_producao=ordem_producao,
+                ordem_manutencao=ordem_manutencao,
                 parecer_producao=parecer_producao,
                 lista_problemas_ids=lista_problemas
             )
