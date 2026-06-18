@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CRMF{% endblock %}</title>
+    {% load static %}
     <style>
         /* Reset básico e fontes */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -11,13 +13,13 @@
             display: flex; 
             flex-direction: column; 
             min-height: 100vh; 
-            background-color: #f4eaeb; 
+            background-color: #ffffff; 
             overflow-y: scroll;
         }
 
         /* Cabeçalho Superior Principal */
         .header {
-            background-color: #1a3c5e; /* Azul escuro da Soprano */
+            background-color: #004B78; /* Azul escuro da Soprano */
             color: white;
             padding: 15px 25px;
             font-size: 26px;
@@ -46,10 +48,10 @@
         }
 
         .nav-tab-link {
-            color: #1a3c5e;
+            color: #004B78;
             text-decoration: none;
             padding: 0 20px; /* Ajustado para alinhar perfeitamente a barra azul */
-            font-size: 15px; /* Tamanho levemente ajustado para o menu superior */
+            font-size: 20px; /* Tamanho levemente ajustado para o menu superior */
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -71,8 +73,8 @@
         /* Efeito de passar o mouse por cima (Hover) */
         .nav-tab-link:hover {
             background-color: #f8f9fa;
-            color: #4a90e2;
-            border-bottom: 3px solid #4a90e2;
+            color: #004B78;
+            border-bottom: 3px solid #004B78;
         }
 
         /* Empurra o formulário de logout para o final da direita */
@@ -83,9 +85,9 @@
         }
         /* Estilo para destacar visualmente a página em que o usuário está */
         .nav-tab-link.active-page {
-            color: #1a3c5e;
-            border-bottom: 3px solid #1a3c5e;
-            background-color: rgba(26, 60, 94, 0.05);
+            color: #004B78;
+            border-bottom: 3px solid #004B78;
+            background-color: rgba(0, 75, 120, 0.05);
         }
 
         /* Área de Conteúdo Principal */
@@ -113,6 +115,25 @@
            2. 📱 RESPONSIVIDADE PARA CELULARES (ATÉ 768PX) - FIM DA BAGUNÇA
            ========================================================================== */
         @media (max-width: 768px) {
+            .header {
+                flex-direction: column !important; /* Empilha: Logo em cima, Título embaixo */
+                padding: 10px !important;
+                height: auto !important;
+                min-height: auto !important;
+                position: relative !important; /* Tira a trava para o conteúdo crescer */
+            }
+            
+            .titulo-crmf {
+                position: static !important; /* Remove o bloqueio absoluto no celular */
+                transform: none !important; /* Tira o alinhamento central forçado do PC */
+                font-size: 35px !important; /* Diminui a fonte do CRMF no celular */
+                margin-top: 10px !important;
+            }
+
+            .logo-container img {
+                height: 40px !important; /* Logo levemente menor no celular */
+                max-width: 100% !important;
+            }
             
             /* 🧭 MENU: Transforma em uma barra horizontal perfeita no rodapé */
             .nav-tabs-container {
@@ -124,30 +145,41 @@
                 padding: 0;
                 gap: 0;
                 border-bottom: none;
-                border-top: 2px solid #1a3c5e;
+                border-top: 2px solid #004B78;
                 z-index: 10000;
                 background-color: #ffffff;
                 height: 60px; /* Altura fixa ergonômica para o polegar */
             }
 
             /* Distribui os 3 links igualmente preenchendo 100% da largura horizontal */
-            .nav-tab-link {
+            .nav-tab-link, .logout-form {
                 flex: 1 !important; 
-                width: auto !important;
+                width: 100% !important; /* Força o preenchimento */
+                display: flex !important; /* Garante que o form se comporte como um bloco flexível */
                 justify-content: center;
                 align-items: center;
+                padding: 0 !important; /* Zera o padding do form para não dar problema */
+                margin: 0 !important;
+            }
+
+            /* Estilo específico para os links e para o botão DENTRO do form */
+            a.nav-tab-link, .logout-form button.nav-tab-link {
+                width: 100% !important;
+                height: 100% !important; /* Faz o botão preencher todo o espaço do form */
                 padding: 10px 2px !important;
-                font-size: 13px !important; /* Compacto para não quebrar texto em telas pequenas */
+                font-size: 13px !important; 
                 border-bottom: none !important;
-                border-top: 3px solid transparent !important; /* Destaque visual vai para o topo do botão */
+                border-top: 3px solid transparent !important;
                 white-space: nowrap;
+                background-color: transparent; /* Garante que o fundo do botão Sair fique transparente */
+                border-radius: 0; /* Remove bordas arredondadas padrão de botões no celular */
             }
 
             /* Indicador visual de aba ativa adaptado para a barra horizontal inferior */
             .nav-tab-link.active-page {
-                border-top: 3px solid #1a3c5e !important;
+                border-top: 3px solid #004B78 !important;
                 border-left: none !important;
-                background-color: rgba(26, 60, 94, 0.05);
+                background-color: rgba(0, 75, 120, 0.05);
             }
 
             /* 📐 CONTEÚDO: Margem de proteção inferior menor para a barra horizontal */
@@ -243,12 +275,12 @@
 <body>
 
     <header class="header" style="position: relative; display: flex; align-items: center; min-height: 65px; box-sizing: border-box; width: 100%; padding: 0 20px;">
-        
-        <div class="header-title" style="position: absolute; top: 10px; left: 20px; font-size: 26px; font-weight: normal; opacity: 1; letter-spacing: 0.5px;">
-            SOPRANO
+    
+        <div class="logo-container">
+            <img src="{% static 'img/logo_soprano.png' %}" alt="Logo Soprano" style="height: 50px;">
         </div>
-        
-        <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 26px; font-weight: 800; letter-spacing: 1.5px; line-height: 1; margin: 0; padding: 0; white-space: nowrap;">
+                
+        <div class="titulo-crmf" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-family: Montserrat, sans-serif; font-size: 50px; font-weight: 600; letter-spacing: 1px; line-height: 1; margin: 0; padding: 0; white-space: nowrap;">
             CRMF
         </div>
 
@@ -256,8 +288,8 @@
 
     <!-- Alterado titulos de elementos da navegação -->
     <nav class="nav-tabs-container">
-        <a href="{% url 'ferramentaria:dashboard' %}" class="nav-tab-link" id="nav-dash">📊 Dashboard</a>
-        <a href="{% url 'ferramentaria:historico' %}" class="nav-tab-link" id="nav-hist">📜 Histórico</a>
+        <a href="{% url 'ferramentaria:dashboard' %}" class="nav-tab-link" id="nav-dash">📊 Home</a>
+        <a href="{% url 'ferramentaria:historico' %}" class="nav-tab-link" id="nav-hist">📜 Detalhes</a>
 
         {% if request.user.is_staff or perms.app_ferramentaria.change_molde %}
             <a href="{% url 'ferramentaria:gerenciamento' %}" class="nav-tab-link" id="nav-gerenc">⚙️ Gerenciamento</a>
@@ -266,7 +298,7 @@
         <form method="POST" action="{% url 'ferramentaria:logout' %}" class="logout-form">
             {% csrf_token %}
             <button type="submit" class="nav-tab-link" style="border:none; cursor:pointer;">
-                🚪 Sair ({{ request.user.username }})
+                🚪 Sair
             </button>
         </form>
     </nav>
@@ -279,7 +311,7 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const currentUrl = window.location.pathname;
-            if (currentUrl.includes("dashboard")) {
+            if (currentUrl.includes("dashboard") || currentUrl === "/") {
                 document.getElementById("nav-dash").classList.add("active-page");
             } else if (currentUrl.includes("historico")) {
                 document.getElementById("nav-hist").classList.add("active-page");

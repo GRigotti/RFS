@@ -16,7 +16,7 @@
     .dash-left {
         flex: 7;
         min-width: 0; /* CRÍTICO: Impede que o gráfico estufe e empurre o painel direito para baixo */
-        background-color: #9c8481;
+        background-color: #868686;
         border-radius: 8px;
         padding: 20px;
         display: flex;
@@ -74,7 +74,7 @@
        COMPONENTES VISUAIS (BOTÕES E LISTAS)
        ========================================= */
     .btn-reg {
-        background-color: #1a3c5e;
+        background-color: #004B78;
         color: white;
         border: none;
         padding: 25px 20px;
@@ -92,7 +92,7 @@
        ========================================= */
     .pendencias-box {
         flex: 1;
-        background-color: #9c8481;
+        background-color: #868686;
         border-radius: 8px;
         padding: 15px;
         color: #3b2826;
@@ -261,7 +261,7 @@
 
 </style>
 
-<div style="background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; margin-bottom: 20px;">
+<div style="background: #868686; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; margin-bottom: 20px;">
     <form method="GET" action="" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; width: 100%; margin: 0; padding: 0;">
         
         {% if molde_selecionado %}
@@ -269,29 +269,29 @@
         {% endif %}
         <!--- Modificado titulo para maior clareza e adicionado contadores de solicitações abertas e concluídas no período -->
         <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
-            <h3 style="color: #1a3c5e; font-size: 1.15rem; font-weight: bold; margin: 0; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
+            <h3 style="color: #004B78; font-size: 1.15rem; font-weight: bold; margin: 0; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
                 📊 Solicitações 
             </h3>
             <div style="display: flex; align-items: center; gap: 6px;">
                 <span style="background-color: #d9534f; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.95rem; line-height: 1;">
                     {{ total_abertas_periodo }}
                 </span>
-                <span style="color: #495057; font-size: 0.9rem; font-weight: 600;">Abertas</span>
+                <span style="color: #000000; font-size: 0.9rem; font-weight: 600;">Abertas</span>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
                 <span style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.95rem; line-height: 1;">
                     {{ total_fechadas_periodo }}
                 </span>
-                <span style="color: #495057; font-size: 0.9rem; font-weight: 600;">Concluídas</span>
+                <span style="color: #000000; font-size: 0.9rem; font-weight: 600;">Concluídas</span>
             </div>
         </div>
         
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-left: auto;">
-            <label style="font-size: 0.85rem; font-weight: bold; color: #666; margin: 0;">Período:</label>
-            <input type="date" name="data_inicio" value="{{ data_inicio_filtro }}" style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; color: #333; height: 34px; box-sizing: border-box; background-color: white;">
-            <label style="font-size: 0.85rem; font-weight: bold; color: #666; margin: 0;">até</label>
-            <input type="date" name="data_fim" value="{{ data_fim_filtro }}" style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; color: #333; height: 34px; box-sizing: border-box; background-color: white;">
-            <button type="submit" style="background-color: #1a3c5e; color: white; border: none; padding: 0 18px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.85rem; height: 34px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; box-sizing: border-box;">
+            <label style="font-size: 0.85rem; font-weight: bold; color: #000000; margin: 0;">Período:</label>
+            <input type="date" name="data_inicio" value="{{ data_inicio_filtro }}" style="padding: 6px 10px; border: 1px solid #000000; border-radius: 4px; font-size: 0.85rem; color: #333; height: 34px; box-sizing: border-box; background-color: #ffffff;">
+            <label style="font-size: 0.85rem; font-weight: bold; color: #000000; margin: 0;">até</label>
+            <input type="date" name="data_fim" value="{{ data_fim_filtro }}" style="padding: 6px 10px; border: 1px solid #000000; border-radius: 4px; font-size: 0.85rem; color: #333; height: 34px; box-sizing: border-box; background-color: #ffffff;">
+            <button type="submit" style="background-color: #004B78; color: white; border: none; padding: 0 18px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.85rem; height: 34px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; box-sizing: border-box;">
                 Filtrar
             </button>
         </div>
@@ -301,7 +301,7 @@
 
 <div class="dash-container" style="display: flex; flex-direction: row-reverse; gap: 20px; width: 100%; align-items: stretch; box-sizing: border-box;">
 
-    <div class="dash-left" style="flex: 7; background-color: #9c8481; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); box-sizing: border-box;">
+    <div class="dash-left" style="flex: 7; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); box-sizing: border-box;">
         
         <div class="analisar-molde-container" style="width: 100%;">
             <form method="GET" action="" style="display: flex; align-items: center; gap: 15px; width: 100%; margin: 0;">
@@ -324,7 +324,7 @@
                 
                 <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 130px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box;">
                     <h4 style="color: #666; margin: 0 0 8px 0; text-transform: uppercase; font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px;">Contagem de Ciclos / Batidas</h4>
-                    <div style="font-size: 2.5rem; font-weight: bold; color: #1a3c5e; line-height: 1;">--</div>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: #004B78; line-height: 1;">--</div>
                     <span style="font-size: 0.75rem; color: #999; font-style: italic; margin-top: 8px;">Aguardando integração de sensores IoT com a API</span>
                 </div>
 
@@ -332,7 +332,7 @@
                     <span style="font-size: 2.2rem; line-height: 1;">📍</span>
                     <div style="text-align: left;">
                         <h4 style="color: #666; margin: 0; text-transform: uppercase; font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px;">Endereço / Prateleira</h4>
-                        <div style="font-size: 1.6rem; font-weight: bold; color: #1a3c5e; margin-top: 5px; text-transform: uppercase;">
+                        <div style="font-size: 1.6rem; font-weight: bold; color: #004B78; margin-top: 5px; text-transform: uppercase;">
                             {{ molde_selecionado.endereco_molde|default_if_none:"NÃO INFORMADO" }}
                         </div>
                     </div>
@@ -341,7 +341,7 @@
 
             <div class="dash-inner-split" style="display: flex; gap: 20px; width: 100%;">
                 <div class="card-itens" style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 380px; overflow-y: auto;">
-                    <h3 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 10px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.2rem; font-weight: bold;">Itens Vinculados</h3>
+                    <h3 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 10px; margin-bottom: 15px; color: #004B78; font-size: 1.2rem; font-weight: bold;">Itens Vinculados</h3>
                     <ul style="list-style: none; padding: 0; margin: 0;">
                         {% for item in itens_molde %}
                             <li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
@@ -355,7 +355,7 @@
                 </div>
 
                 <div class="card-grafico" style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height: 380px; display: flex; flex-direction: column;">
-                    <h3 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 10px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.2rem; width: 100%; text-align: left; font-weight: bold; display: flex; align-items: center; box-sizing: border-box;">
+                    <h3 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 10px; margin-bottom: 15px; color: #004B78; font-size: 1.2rem; width: 100%; text-align: left; font-weight: bold; display: flex; align-items: center; box-sizing: border-box;">
                         <span>Incidência de Problemas</span>
                         <span id="badge-total-problemas" style="margin-left: auto; background-color: #9c8481; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">
                             Total: --
@@ -518,7 +518,7 @@
         <h2>Tratar Pendência</h2>
         <hr style="margin-bottom: 15px;">
         
-        <div style="background-color: #f4f6f9; border-left: 4px solid #1a3c5e; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 0.9rem; color: #333;">
+        <div style="background-color: #f4f6f9; border-left: 4px solid #004B78; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 0.9rem; color: #333;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
                 <span><strong>OS Nº:</strong> <span id="detalhe-id"></span></span>
                 <span><strong>Abertura:</strong> <span id="detalhe-data"></span></span>
@@ -573,7 +573,7 @@
             </div>
             
             {% if pode_editar %}
-                <button type="submit" class="btn-submit" style="background-color: #1a3c5e; width: 100%; margin-top: 10px;">
+                <button type="submit" class="btn-submit" style="background-color: #004B78; width: 100%; margin-top: 10px;">
                     Registrar Manutenção
                 </button>
             {% else %}
@@ -653,7 +653,7 @@
             labels: labelsProblemas,
             datasets: [{
                 data: valoresProblemas,
-                backgroundColor: ['#1a3c5e', '#d9534f', '#f0ad4e', '#5cb85c', '#5bc0de', '#8a6d3b'],
+                backgroundColor: ['#004B78', '#d9534f', '#f0ad4e', '#5cb85c', '#5bc0de', '#8a6d3b'],
                 borderWidth: 1
             }]
         },

@@ -95,13 +95,13 @@
         display: flex;
         flex-direction: column;
     }
-    .card-chart h4 { border-bottom: 2px solid #f4eaeb; padding-bottom: 8px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.1rem; font-weight: bold; text-align: left; }
+    .card-chart h4 { border-bottom: 2px solid #f4eaeb; padding-bottom: 8px; margin-bottom: 15px; color: #004B78; font-size: 1.1rem; font-weight: bold; text-align: left; }
     .chart-wrapper { position: relative; width: 100%; flex: 1; min-height: 200px; }
 
     /* Badges de Status do Histórico */
     .status-tag { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; color: white; margin-right: 5px; }
     .st-concluido { background-color: #28a745; }
-    .st-manutencao { background-color: #2b3a4a; }
+    .st-manutencao { background-color: #004B78; }
     .st-aberto { background-color: #d9534f; }
 
     /* ==========================================================================
@@ -139,7 +139,7 @@
         cursor: pointer; 
         color: #aaa; 
     }
-    .modal-close:hover { color: #333; }
+    .modal-close:hover { color: #004B78; }
     
     /* Formatação dos labels e caixas de texto internas da ficha */
     .modal-content .form-group { 
@@ -150,7 +150,7 @@
         display: block; 
         margin-bottom: 5px; 
         font-weight: bold; 
-        color: #333; 
+        color: #004B78; 
         font-size: 0.9rem;
     }
     .modal-content .form-group textarea { 
@@ -173,9 +173,9 @@
     
     <div style="background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: 15px;">
         <form method="GET" action="" style="display: flex; align-items: center; gap: 15px; margin: 0; width: 100%;">
-            <label style="color: #1a3c5e; font-weight: bold; font-size: 1.1rem; white-space: nowrap; margin: 0;">📚 Consultar Histórico:</label>
-            <select name="molde_filtro" onchange="this.form.submit()" style="width: 300px; padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; font-size: 1rem; font-weight: bold; color: #333;">
-                <option value="todos" {% if molde_filtro == 'todos' %}selected{% endif %}>🌍 TODOS </option> <!-- modificado titulo -->
+            <label style="color: #004B78; font-weight: bold; font-size: 1.1rem; white-space: nowrap; margin: 0;">📚 Consultar Histórico:</label>
+            <select name="molde_filtro" onchange="this.form.submit()" style="width: 300px; padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; font-size: 1rem; font-weight: bold; color: #004B78;">
+                <option value="todos" {% if molde_filtro == 'todos' %}selected{% endif %}>TODOS </option> <!-- modificado titulo -->
                 {% for m in lista_moldes %}
                     <option value="{{ m.id }}" {% if molde_selecionado.id == m.id %}selected{% endif %}>{{ m.molde_nome }}</option>
                 {% endfor %}
@@ -250,7 +250,7 @@
 
            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 280px; overflow-y: auto; box-sizing: border-box; width: 100%;">
                 
-                <h4 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 8px; margin-bottom: 15px; color: #1a3c5e; font-size: 1.1rem; font-weight: bold; margin-top: 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <h4 style="border-bottom: 2px solid #f4eaeb; padding-bottom: 8px; margin-bottom: 15px; color: #004B78; font-size: 1.1rem; font-weight: bold; margin-top: 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                     <span>📦 Itens Vinculados a esta Ferramenta</span>
                     
                     <span style="background-color: #9c8481; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 4px; font-family: sans-serif;">
@@ -335,21 +335,21 @@
             <input type="hidden" name="tipo_acao" value="registrar_manutencao">
             <input type="hidden" name="os_id" id="h-id-input">
 
-            <h2 style="color: #1a3c5e; border-bottom: 2px solid #1a3c5e; padding-bottom: 5px; margin-bottom: 15px; font-weight: bold; font-size: 1.4rem;">
+            <h2 style="color: #004B78; border-bottom: 2px solid #004B78; padding-bottom: 5px; margin-bottom: 15px; font-weight: bold; font-size: 1.4rem;">
                 📋 Ficha de Manutenção nº <span id="h-id">--</span>
             </h2>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #1a3c5e;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #004B78;">
                 <div><strong>Molde:</strong> <span id="h-molde">--</span></div>
                 <div><strong>Máquina Linha:</strong> <span id="h-maquina">--</span></div>
                 <div><strong>Ordem de Manutenção:</strong> <span id="h-op">--</span> </div>
                 <div><strong>Operador:</strong> <span id="h-operador">--</span></div>
                 
                 <div style="grid-column: span 2; display: flex; align-items: center; gap: 5px; margin-top: 5px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                    <div id="h-status-view" style="width: 100%;"><strong>Status Atual:</strong> <span id="h-status" style="font-weight: bold; color: #1a3c5e;">--</span></div>
+                    <div id="h-status-view" style="width: 100%;"><strong>Status Atual:</strong> <span id="h-status" style="font-weight: bold; color: #004B78;">--</span></div>
                     
                     <div id="h-status-edit" style="display: none; width: 100%; align-items: center; gap: 10px;">
-                        <label style="font-weight: bold; margin: 0; color: #1a3c5e; white-space: nowrap;">Alterar Status:</label>
+                        <label style="font-weight: bold; margin: 0; color: #004B78; white-space: nowrap;">Alterar Status:</label>
                         <select name="novo_status" id="h-status-select" {% if not pode_editar %}disabled{% endif %} style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold;">
                             <option value="Aberto">Aberto</option>
                             <option value="Em Manutenção">Em Manutenção</option>
@@ -407,7 +407,7 @@
 
             <div id="h-botao-salvar-container" style="display: none; justify-content: flex-end; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; width: 100%;">
                 {% if pode_editar %}
-                    <button type="submit" style="background-color: #1a3c5e; color: white; border: none; padding: 10px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transition: background 0.2s;">
+                    <button type="submit" style="background-color: #004B78; color: white; border: none; padding: 10px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transition: background 0.2s;">
                         Salvar Alterações
                     </button>
                 {% else %}
@@ -511,7 +511,7 @@
             // Libera a caixa de digitação para o laudo técnico
             txtLaudoFerramentaria.readOnly = false;
             txtLaudoFerramentaria.style.backgroundColor = '#ffffff';
-            txtLaudoFerramentaria.style.color = '#1a3c5e';
+            txtLaudoFerramentaria.style.color = '#004B78';
 
             // Faz aparecer o botão Salvar Alterações
             document.getElementById('h-botao-salvar-container').style.display = 'flex';
@@ -559,8 +559,8 @@
 
             
             const colorMapping = {
-                'Concluído': '#28a745',       // Azul Escuro Soprano (Igual à tag CON)
-                'Em Manutenção': '#1a3c5e',   // Verde (Igual à tag MAN)
+                'Concluído': '#28a745',       // Verde (Igual à tag CON)
+                'Em Manutenção': '#004B78',   // Azul Escuro Soprano (Igual à tag MAN)
                 'Aberto': '#dc3545',          // Vermelho (Igual à tag PEN)
                 
             };
@@ -596,7 +596,7 @@
         type: 'bar',
         data: {
             labels: labelsTop,
-            datasets: [{ label: 'Volume de Registros', data: valoresTop, backgroundColor: '#1a3c5e', borderRadius: 4 }]
+            datasets: [{ label: 'Volume de Registros', data: valoresTop, backgroundColor: '#004B78', borderRadius: 4 }]
         },
         options: {
             responsive: true,
@@ -627,7 +627,7 @@
                         borderColor: '#9c8481', // Cor da linha (Marrom da Soprano)
                         backgroundColor: 'rgba(156, 132, 129, 0.2)', // Preenchimento suave
                         borderWidth: 3,
-                        pointBackgroundColor: '#1a3c5e', // Pontos em Azul Escuro
+                        pointBackgroundColor: '#004B78', // Pontos em Azul Escuro
                         pointRadius: 5,
                         fill: true, // Preenche a área debaixo da linha
                         tension: 0.3 // Deixa a linha suave/curvada
@@ -665,7 +665,7 @@
             type: 'bar',
             data: {
                 labels: labelsDefeitosGerais,
-                datasets: [{ label: 'Ocorrências Globais', data: valoresDefeitosGerais, backgroundColor: '#1a3c5e', borderRadius: 4 }]
+                datasets: [{ label: 'Ocorrências Globais', data: valoresDefeitosGerais, backgroundColor: '#004B78', borderRadius: 4 }]
             },
             options: {
                 responsive: true,
