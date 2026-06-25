@@ -1,6 +1,8 @@
 from django.db import models  # type: ignore
 from django.utils import timezone  # type: ignore
 from django.contrib.auth.models import User
+from django.contrib.auth.signals import user_logged_in
+from django.dispatch import receiver
 
 class Molde(models.Model):
     # O Django já assume 'id' como primary key automaticamente se não especificarmos
@@ -86,13 +88,18 @@ class SolicitacaoManutencao(models.Model):
     data_abertura = models.DateTimeField(db_column='data_abertura', default=timezone.now)
     data_fechamento = models.DateTimeField(db_column='data_fechamento', null=True)
     ultima_alteracao = models.DateTimeField(db_column='ultima_alteracao', auto_now=True)
+    item = models.ForeignKey(ItemPorMolde, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Item / IN")
+    motivo_manutencao = models.CharField(max_length=255, null=True, blank=True, verbose_name="Motivo (Em Manutenção)")
+    previsao_retorno = models.DateField(null=True, blank=True, verbose_name="Previsão de Retorno")
 
     # Mapeamento exato das suas tabelas de ligação originais
     problemas = models.ManyToManyField(Problema, through='SolicitacaoProblema')
     acoes = models.ManyToManyField(AcaoManutencao, through='SolicitacaoAcao')
 
+
+
     class Meta:
-        managed = False
+        managed = True
         db_table = 'solicitacoes_manutencao'
 
 # Tabelas de Ligação explícitas
@@ -122,6 +129,12 @@ class LogAuditoria(models.Model):
         blank=True,
         verbose_name="Usuário"
     )
+
+    modulo = models.CharField(
+        max_length=50, 
+        verbose_name="Módulo",
+        default="GERAL"
+    )
     
     # Tipo da ação realizada (Ex: 'MOLDE_EDITADO', 'MAQUINA_EXCLUIDA', 'STATUS_ALTERADO')
     acao = models.CharField(
@@ -147,3 +160,12 @@ class LogAuditoria(models.Model):
     def __str__(self):
         user_name = self.usuario.username if self.usuario else "Sistema"
         return f"{user_name} - {self.acao} em {self.data_hora.strftime('%d/%m/%Y %H:%i')}"
+    
+    @receiver(user_logged_in)
+    def registrar_log_login(sender, request, user, **kwargs):
+        LogAuditoria.objects.create(
+            usuario=user,
+            modulo='SISTEMA',
+            acao='LOGIN',
+            descricao=f'Sessão iniciada no sistema.'
+    )

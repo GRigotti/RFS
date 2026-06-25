@@ -345,7 +345,7 @@
                     <ul style="list-style: none; padding: 0; margin: 0;">
                         {% for item in itens_molde %}
                             <li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
-                                <strong style="color: #333;">{{ item.item_codigo }}</strong><br>
+                                <strong style="color: #333;">{{ item.item_codigo }}{% if item.cod_complementar %} - {{ item.cod_complementar }}{% endif %}</strong><br>
                                 <span style="font-size: 0.85rem; color: #666;">{{ item.descricao }}</span>
                             </li>
                         {% empty %}
@@ -393,10 +393,12 @@
                 <li class="item-pendencia" 
                     data-id="{{ os.id }}" 
                     data-molde="{{ os.molde.molde_nome }}" 
+                    data-IN="{{ os.item.cod_complementar|default:'-' }}"
                     data-data="{{ os.data_abertura|date:'d/m/Y H:i' }}"
                     data-maquina="{{ os.maquina.maquina }}"
                     data-operador="{{ os.operador.nome }}"
-                    
+                    data-motivo="{{ os.motivo_manutencao|default:'' }}"
+                    data-previsao="{{ os.previsao_retorno|date:'Y-m-d'|default:'' }}"
                     data-OM="{{ os.ordem_manutencao }}"
                    
                     data-parecer-prod="{{ os.parecer_producao|default:'Nenhum parecer informado.' }}"
@@ -452,6 +454,18 @@
                 </select>
             </div>
             
+            <div class="form-group">
+                <label>IN</label>
+                <select name="inValor" class="form-control" required>
+                    <option value="">Selecione o IN (Opcional)...</option>
+                    {% for item in itens_molde %}
+                        {% if item.cod_complementar %}
+                            <option value="{{ item.id }}">{{ item.cod_complementar }} - {{ item.item_codigo }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
             <div class="form-group">
                 <label>Máquina</label>
                 <select name="maquina_id" required>
@@ -524,6 +538,7 @@
                 <span><strong>Abertura:</strong> <span id="detalhe-data"></span></span>
             </div>
             <div style="margin-bottom: 4px;"><strong>Molde:</strong> <span id="detalhe-molde"></span></div>
+            <div style="margin-bottom: 4px;"><strong>IN:</strong> <span id="detalhe-in"></span></div>
             <div style="margin-bottom: 4px;"><strong>Máquina:</strong> <span id="detalhe-maquina"></span></div>
             <div style="margin-bottom: 4px;"><strong>Operador:</strong> <span id="detalhe-operador"></span></div>
             <div style="margin-bottom: 4px;"><strong>OM:</strong> <span id="detalhe-om"></span></div> 
@@ -566,10 +581,21 @@
             
             <div class="form-group">
                 <label>Status do Atendimento</label>
-                <select name="novo_status" id="detalhe-status" {% if not pode_editar %}disabled{% endif %} required>
+                <select name="novo_status" id="detalhe-status" {% if not pode_editar %}disabled{% endif %} required onchange="toggleManutencao()">
                     <option value="Em Manutenção">Em Manutenção</option>
                     <option value="Concluído">Concluído</option>
                 </select>
+            </div>
+
+            <div id="bloco-em-manutencao" style="display: none; background: #fff3cd; padding: 12px; border-radius: 4px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="color: #856404;">Previsão</label>
+                    <input type="date" name="previsao_retorno" id="previsao_retorno" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" {% if not pode_editar %}disabled{% endif %}>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="color: #856404;">Aguardando por:</label>
+                    <input type="text" name="motivo_manutencao" id="motivo_manutencao" placeholder="Ex: Aguardando compra de peça..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" {% if not pode_editar %}disabled{% endif %}>
+                </div>
             </div>
             
             {% if pode_editar %}
@@ -595,10 +621,13 @@
         var maquina = elementoClicado.getAttribute('data-maquina');
         var operador = elementoClicado.getAttribute('data-operador');
         var dataom = elementoClicado.getAttribute('data-OM');
+        var inValue = elementoClicado.getAttribute('data-IN');
         //var op = elementoClicado.getAttribute('data-op');
         //var dataop = elementoClicado.getAttribute('data-dataop');
         var problemas = elementoClicado.getAttribute('data-problemas');
         var parecerProd = elementoClicado.getAttribute('data-parecer-prod');
+        var motivo = elementoClicado.getAttribute('data-motivo');
+        var previsao = elementoClicado.getAttribute('data-previsao');
 
         // Injeta os dados nos spans informativos do modal
         document.getElementById('detalhe-id').innerText = id;
@@ -606,20 +635,28 @@
         document.getElementById('detalhe-data').innerText = data;
         document.getElementById('detalhe-maquina').innerText = maquina;
         document.getElementById('detalhe-operador').innerText = operador;
+        document.getElementById('detalhe-in').innerText = inValue;
         document.getElementById('detalhe-om').innerText = dataom;
         //document.getElementById('detalhe-op').innerText = op;
         //document.getElementById('detalhe-dataop').innerText = dataop;
         document.getElementById('detalhe-problemas').innerText = problemas;
         document.getElementById('detalhe-parecer-prod').innerText = parecerProd;
-        
+       
+
         // Seta o ID da OS no input hidden para enviar via POST correto
         document.getElementById('input-os-id').value = id;
         var statusAtual = elementoClicado.getAttribute('data-status');
         document.getElementById('detalhe-status').value = statusAtual || "Aberto";
 
+        var inputMotivo = document.getElementById('motivo_manutencao');
+        var inputPrevisao = document.getElementById('previsao_retorno');
+        if (inputMotivo) inputMotivo.value = motivo;
+        if (inputPrevisao) inputPrevisao.value = previsao;
+
         var modal = document.getElementById('modalDetalhesOS');
         if (modal) {
             modal.style.display = 'flex'; // Usamos flex pois o seu CSS deve usar flex no modal
+            toggleManutencao();
         }
     }
 
@@ -683,6 +720,57 @@
         console.log("Aviso ao carregar totalizador: ", erro);
     }
 </script>
+
+
 {% endif %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Captura os dois campos na tela pelos seus nomes (name="")
+    const moldeSelect = document.querySelector('select[name="molde_id"]'); // Ajuste aqui se o name do seu select de molde for diferente!
+    const inSelect = document.querySelector('select[name="inValor"]');
+
+    if (moldeSelect && inSelect) {
+        // Fica "escutando" qualquer mudança no campo Molde
+        moldeSelect.addEventListener("change", function() {
+            const moldeId = this.value;
+            
+            // Coloca um aviso de "Carregando" enquanto busca no banco
+            inSelect.innerHTML = '<option value="">Carregando...</option>';
+
+            if (moldeId) {
+                // Vai até o servidor buscar os itens daquele molde
+                fetch(`/ajax/carregar-itens/?molde_id=${moldeId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpa o select e adiciona a primeira opção
+                        inSelect.innerHTML = '<option value="">Selecione o IN (Opcional)...</option>';
+                        
+                        // Cria uma nova opção <option> para cada item que o servidor devolveu
+                        data.forEach(item => {
+                            inSelect.innerHTML += `<option value="${item.id}">${item.texto}</option>`;
+                        });
+                    })
+                    .catch(error => console.error('Erro ao buscar itens:', error));
+            } else {
+                inSelect.innerHTML = '<option value="">Selecione primeiro o Molde</option>';
+            }
+        });
+    }
+});
+</script>
+
+<script>
+    function toggleManutencao() {
+        var status = document.getElementById('detalhe-status').value;
+        var bloco = document.getElementById('bloco-em-manutencao');
+        
+        if (status === 'Em Manutenção') {
+            bloco.style.display = 'block';
+        } else {
+            bloco.style.display = 'none';
+        }
+    }
+</script>
 
 {% endblock %}

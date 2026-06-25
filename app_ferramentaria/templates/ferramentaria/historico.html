@@ -261,7 +261,8 @@
                 <ul style="list-style: none; padding: 0; margin: 0; text-align: left;">
                     {% for item in itens_molde %}
                         <li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-family: inherit;">
-                            <strong style="color: #333; font-size: 0.92rem;">{{ item.item_codigo }}</strong><br>
+                            <strong style="color: #333;">{{ item.item_codigo }}{% if item.cod_complementar %} - {{ item.cod_complementar }}{% endif %}</strong><br>
+
                             <span style="font-size: 0.85rem; color: #666;">{{ item.descricao }}</span>
                         </li>
                     {% empty %}
@@ -285,9 +286,12 @@
                     <li class="item-historico"
                         data-id="{{ os.id }}"
                         data-molde="{{ os.molde.molde_nome }}"
+                        data-in="{{ os.item.cod_complementar|default:'N/A' }}"
                         data-maquina="{{ os.maquina.maquina }}"
                         data-operador="{{ os.operador.nome }}"
                         data-OM="{{ os.ordem_manutencao }}"
+                        data-motivo="{{ os.motivo_manutencao|default:'' }}"
+                        data-previsao="{{ os.previsao_retorno|date:'Y-m-d'|default:'' }}"
                         
                         data-status="{{ os.status }}"
                         data-abertura="{{ os.data_abertura|date:'d/m/Y H:i' }}"
@@ -308,7 +312,7 @@
                             {% elif os.status == 'Em Manutenção' %}<span class="status-tag st-manutencao">MAN</span>
                             {% else %}<span class="status-tag st-aberto">PEN</span>{% endif %}
                         </span>
-                        
+
                         <span class="c-problemas">{% for p in os.problemas.all %}{{ p.problema }}{% if not forloop.last %}, {% endif %}{% empty %}Relato Técnico{% endfor %}</span>
                         
                         <span class="c-acoes">
@@ -341,20 +345,38 @@
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #004B78;">
                 <div><strong>Molde:</strong> <span id="h-molde">--</span></div>
-                <div><strong>Máquina Linha:</strong> <span id="h-maquina">--</span></div>
+                <div><strong>IN:</strong> <span id="h-in">--</span></div> <div><strong>Máquina Linha:</strong> <span id="h-maquina">--</span></div>
                 <div><strong>Ordem de Manutenção:</strong> <span id="h-op">--</span> </div>
-                <div><strong>Operador:</strong> <span id="h-operador">--</span></div>
+                <div style="grid-column: span 2;"><strong>Operador:</strong> <span id="h-operador">--</span></div>
                 
                 <div style="grid-column: span 2; display: flex; align-items: center; gap: 5px; margin-top: 5px; border-top: 1px dashed #ccc; padding-top: 5px;">
                     <div id="h-status-view" style="width: 100%;"><strong>Status Atual:</strong> <span id="h-status" style="font-weight: bold; color: #004B78;">--</span></div>
                     
                     <div id="h-status-edit" style="display: none; width: 100%; align-items: center; gap: 10px;">
                         <label style="font-weight: bold; margin: 0; color: #004B78; white-space: nowrap;">Alterar Status:</label>
-                        <select name="novo_status" id="h-status-select" {% if not pode_editar %}disabled{% endif %} style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold;">
-                            <option value="Aberto">Aberto</option>
+                        <select name="novo_status" id="h-status-select" {% if not pode_editar %}disabled{% endif %} style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold;" onchange="toggleManutencaoHistorico()">
                             <option value="Em Manutenção">Em Manutenção</option>
                             <option value="Concluído">Concluído</option>
                         </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="h-bloco-manutencao" style="display: none; background: #fff3cd; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+                
+                <div id="h-manutencao-view">
+                    <div style="font-size: 0.9rem; color: #856404;"><strong>Previsão:</strong> <span id="h-previsao-texto">--</span></div>
+                    <div style="margin-bottom: 5px; font-size: 0.9rem; color: #856404;"><strong>Aguardando por:</strong> <span id="h-motivo-texto">--</span></div>
+                </div>
+
+                <div id="h-manutencao-edit" style="display: none;">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label style="color: #856404; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem;">Previsão</label>
+                        <input type="date" name="previsao_retorno" id="h-previsao-input" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" {% if not pode_editar %}disabled{% endif %}>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: #856404; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem;">Aguardando por:</label>
+                        <input type="text" name="motivo_manutencao" id="h-motivo-input" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" {% if not pode_editar %}disabled{% endif %}>
                     </div>
                 </div>
             </div>
@@ -436,13 +458,16 @@
     function verDetalhesFicha(elemento) {
         var idOS = elemento.getAttribute('data-id');
         var status = elemento.getAttribute('data-status'); // Captura o status da OS (Aberto, Em Manutenção, Concluído)
-        
+        var motivo = elemento.getAttribute('data-motivo') || '';
+        var previsao = elemento.getAttribute('data-previsao') || '';
+
         // Atribui os IDs obrigatórios de envio
         document.getElementById('h-id-input').value = idOS;
         document.getElementById('h-id').innerText = idOS;
         
         // Alimenta os dados de texto comuns das duas visões
         document.getElementById('h-molde').innerText = elemento.getAttribute('data-molde');
+        document.getElementById('h-in').innerText = elemento.getAttribute('data-in');
         document.getElementById('h-maquina').innerText = elemento.getAttribute('data-maquina');
         document.getElementById('h-operador').innerText = elemento.getAttribute('data-operador');
         document.getElementById('h-op').innerText = elemento.getAttribute('data-OM');
@@ -453,6 +478,10 @@
         document.getElementById('h-problemas').innerText = elemento.getAttribute('data-problemas');
         document.getElementById('h-parecer-prod').value = elemento.getAttribute('data-parecer-prod');
         document.getElementById('h-parecer-ferr').value = elemento.getAttribute('data-parecer-ferr');
+        document.getElementById('h-motivo-texto').innerText = motivo ? motivo : 'Não informado';
+        document.getElementById('h-previsao-texto').innerText = previsao ? previsao : 'Não informado';
+        document.getElementById('h-motivo-input').value = motivo;
+        document.getElementById('h-previsao-input').value = previsao;
         
         var txtLaudoFerramentaria = document.getElementById('h-parecer-ferr');
 
@@ -473,6 +502,14 @@
             document.getElementById('h-acoes-view').innerText = elemento.getAttribute('data-acoes');
             document.getElementById('h-acoes-edit').style.display = 'none';
 
+            if (motivo) {
+                document.getElementById('h-bloco-manutencao').style.display = 'block';
+                document.getElementById('h-manutencao-view').style.display = 'block';
+                document.getElementById('h-manutencao-edit').style.display = 'none';
+            } else {
+                document.getElementById('h-bloco-manutencao').style.display = 'none';
+            }
+
             // Tranca a caixa de texto técnica
             txtLaudoFerramentaria.readOnly = true;
             txtLaudoFerramentaria.style.backgroundColor = '#f1f1f1';
@@ -492,6 +529,8 @@
 
             document.getElementById('h-acoes-view').style.display = 'none';
             document.getElementById('h-acoes-edit').style.display = 'block';
+
+            toggleManutencaoHistorico();
 
             // Reset inicial das caixas de marcação (Checkboxes)
             document.querySelectorAll('.chk-acao-modal-historico').forEach(function(chk) {
@@ -677,5 +716,23 @@
     
     
     }
+
+    function toggleManutencaoHistorico() {
+        var statusSelect = document.getElementById('h-status-select');
+        var blocoGeral = document.getElementById('h-bloco-manutencao');
+        var blocoEdit = document.getElementById('h-manutencao-edit');
+        var blocoView = document.getElementById('h-manutencao-view');
+
+        if (!statusSelect || !blocoGeral) return;
+
+        if (statusSelect.value === 'Em Manutenção') {
+            blocoGeral.style.display = 'block';
+            blocoEdit.style.display = 'block';
+            blocoView.style.display = 'none';
+        } else {
+            blocoGeral.style.display = 'none';
+        }
+    }
 </script>
+
 {% endblock %}

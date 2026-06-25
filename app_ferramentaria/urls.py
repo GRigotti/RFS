@@ -18,4 +18,5 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='ferramentaria/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='ferramentaria:login'), name='logout'),
     path('salvar_usuario/', views.salvar_usuario, name='salvar_usuario'),
+    path('ajax/carregar-itens/', views.carregar_itens_por_molde, name='carregar_itens_molde'),
 ]

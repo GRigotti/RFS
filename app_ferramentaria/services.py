@@ -1,6 +1,9 @@
+import os
+
 from .models import Molde, ItemPorMolde, Maquina, Colaborador, Problema, AcaoManutencao, SolicitacaoManutencao, SolicitacaoAcao
 from django.db import transaction  # type: ignore[reportMissingModuleSource]
 from django.utils import timezone
+from .models import LogAuditoria
 
 class MoldeService:
     
@@ -128,7 +131,7 @@ class SolicitacaoService:
     
     @staticmethod
     @transaction.atomic
-    def abrir_solicitacao(molde_id, maquina_id, operador_id, ordem_manutencao, parecer_producao, lista_problemas_ids=None):
+    def abrir_solicitacao( molde_id, maquina_id, item_id, operador_id, ordem_manutencao, parecer_producao, lista_problemas_ids=None, usuario_logado=None):
         """
         Cria uma nova OS. Usado pelo modal 'Nova Solicitação'.
         """
@@ -136,22 +139,31 @@ class SolicitacaoService:
         nova_os = SolicitacaoManutencao.objects.create(
             molde_id=molde_id,  # O Django entende o sufixo _id para ForeignKeys
             maquina_id=maquina_id,
+            item_id=item_id,
             operador_id=operador_id,
             # ordem_producao=ordem_producao,
             ordem_manutencao=ordem_manutencao,
             parecer_producao=parecer_producao,
-            status='Aberto'
+            status='Aberto',
         )
         
         # 2. Se o operador marcou os problemas (checkboxes/selects), faz a ligação (Many-to-Many)
         if lista_problemas_ids:
             nova_os.problemas.set(lista_problemas_ids)
-            
+
+        LogAuditoria.objects.create(
+            usuario=usuario_logado,
+            modulo='SOLICITAÇÕES',
+            acao='CRIADO',
+            descricao=f'Abriu a Ficha nº {nova_os.id} para o molde ID {molde_id}.'
+        )
+
         return nova_os.id
+    
 
     @staticmethod
     @transaction.atomic
-    def registrar_manutencao(os_id, responsavel_id, parecer_ferramentaria, novo_status, lista_acoes_ids):
+    def registrar_manutencao(os_id, responsavel_id, parecer_ferramentaria, novo_status, lista_acoes_ids, motivo=None, previsao=None, usuario_logado=None):
         # 1. Busca a Ordem de Serviço aberta que está sendo tratada
         os_obj = SolicitacaoManutencao.objects.get(id=os_id)
 
@@ -159,6 +171,8 @@ class SolicitacaoService:
         os_obj.responsavel_id = responsavel_id if responsavel_id else None
         os_obj.parecer_ferramentaria = parecer_ferramentaria
         os_obj.status = novo_status  # Grava dinamicamente "Em Manutenção" ou "Concluído"
+        os_obj.motivo_manutencao = motivo
+        os_obj.previsao_retorno = previsao
 
         # Se o status estiver sendo alterado para Concluído, grava o carimbo de data/hora atual
         if novo_status == 'Concluído':
@@ -183,4 +197,10 @@ class SolicitacaoService:
                         solicitacao=os_obj,
                         acao_id=int(acao_id)
                     )
-           
+        
+        LogAuditoria.objects.create(
+            usuario=usuario_logado,
+            modulo='SOLICITAÇÕES',
+            acao='STATUS_ALTERADO',
+            descricao=f'Atualizou a Ficha nº {os_id} para o status "{novo_status}".'
+        )

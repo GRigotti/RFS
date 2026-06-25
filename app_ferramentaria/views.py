@@ -5,14 +5,14 @@ from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Count, F, Avg
-from .models import ItemPorMolde, Molde, Maquina, Colaborador, Problema, SolicitacaoManutencao, AcaoManutencao
+from .models import ItemPorMolde, Molde, Maquina, Colaborador, Problema, SolicitacaoManutencao, AcaoManutencao, LogAuditoria
 from .services import MoldeService, ColaboradorService, SolicitacaoService # Importamos os serviços que criamos
 from django.views.decorators.csrf import csrf_protect
 from django.db.models.functions import ExtractMonth, ExtractYear
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.models import User, Group
-from .models import LogAuditoria
+from django.http import JsonResponse
 import traceback
 
 # ==============================================================================
@@ -85,7 +85,7 @@ def dashboard_view(request):
                 return redirect(request.META.get('HTTP_REFERER', '/')) 
             # ================================================================
 
-
+            id_item_selecionado = request.POST.get('inValor')
             maquina_id = request.POST.get('maquina_id')
             operador_id = request.POST.get('operador_id')
             # ordem_producao = request.POST.get('ordem_producao')
@@ -104,7 +104,9 @@ def dashboard_view(request):
                 #ordem_producao=ordem_producao,
                 ordem_manutencao=ordem_manutencao,
                 parecer_producao=parecer_producao,
-                lista_problemas_ids=lista_problemas
+                lista_problemas_ids=lista_problemas,
+                item_id=id_item_selecionado,
+                usuario_logado=request.user
             )
             
             messages.success(request, "Solicitação registrada com sucesso!")
@@ -119,6 +121,12 @@ def dashboard_view(request):
             parecer_ferramentaria = request.POST.get('parecer_ferramentaria')
             novo_status = request.POST.get('novo_status') # "Em Manutenção" ou "Concluído"
             
+            # 🟢 CAPTURA DOS NOVOS CAMPOS
+            motivo = request.POST.get('motivo_manutencao')
+            previsao = request.POST.get('previsao_retorno')
+            if not previsao:
+                previsao = None # Evita erro no banco de dados se a data vier vazia
+
             # Captura a lista de checkboxes marcados
             lista_acoes_ids = request.POST.getlist('acoes_realizadas_ids')
             
@@ -137,7 +145,10 @@ def dashboard_view(request):
                 responsavel_id=responsavel_id,
                 parecer_ferramentaria=parecer_ferramentaria,
                 novo_status=novo_status,
-                lista_acoes_ids=lista_acoes_ids
+                lista_acoes_ids=lista_acoes_ids,
+                motivo=motivo,       
+                previsao=previsao,
+                usuario_logado=request.user
             )
             
             messages.success(request, f"Manutenção gravada! OS nº {os_id} atualizada para '{novo_status}'.")
@@ -220,6 +231,12 @@ def historico_view(request):
             parecer_ferramentaria = request.POST.get('parecer_ferramentaria')
             novo_status = request.POST.get('novo_status')
             lista_acoes_ids = request.POST.getlist('acoes_realizadas_ids')
+            motivo = request.POST.get('motivo_manutencao')
+            previsao = request.POST.get('previsao_retorno')
+            if not previsao:
+                previsao = None
+
+            lista_acoes_ids = request.POST.getlist('acoes_realizadas_ids')
             
             # Validação idêntica à do Dashboard para segurança da ferramentaria
             if novo_status == 'Concluído' and not lista_acoes_ids:
@@ -235,7 +252,10 @@ def historico_view(request):
                 responsavel_id=responsavel_id,
                 parecer_ferramentaria=parecer_ferramentaria,
                 novo_status=novo_status,
-                lista_acoes_ids=lista_acoes_ids
+                lista_acoes_ids=lista_acoes_ids,
+                motivo=motivo,
+                previsao=previsao,
+                usuario_logado=request.user
             )
             
             #messages.success(request, f"Ficha nº {os_id} atualizada com sucesso!")
@@ -385,9 +405,13 @@ def salvar_molde(request):
         if id_reg: # Editar Existente
             obj = get_object_or_404(Molde, id=id_reg)
             obj.molde_nome = molde_nome
-            obj.endereco_molde = endereco_molde # ADICIONADO
-            obj.status = status                 # ADICIONADO
+            obj.endereco_molde = endereco_molde 
+            obj.status = status                 
             obj.save()
+            LogAuditoria.objects.create(
+                usuario=request.user, modulo='MOLDES', acao='EDITADO',
+                descricao=f"Alterou o molde '{molde_nome}' (ID: {id_reg}). Status: {status}."
+            )
             messages.success(request, "Molde atualizado com sucesso!")
         else: # Criar Novo
             # ADICIONADO OS CAMPOS NO CREATE:
@@ -395,6 +419,10 @@ def salvar_molde(request):
                 molde_nome=molde_nome, 
                 endereco_molde=endereco_molde, 
                 status=status
+            )
+            LogAuditoria.objects.create(
+                usuario=request.user, modulo='MOLDES', acao='CRIADO',
+                descricao=f"Cadastrou o novo molde '{molde_nome}'."
             )
             messages.success(request, "Novo molde cadastrado com sucesso!")
             
@@ -423,6 +451,10 @@ def salvar_maquina(request):
             obj.descricao = descricao         # ADICIONADO
             obj.status = status
             obj.save()
+            LogAuditoria.objects.create(
+                usuario=request.user, modulo='MÁQUINAS', acao='EDITADO',
+                descricao=f"Alterou a máquina '{maquina}' (ID: {id_reg}). Status: {status}."
+            )
         else:
             # ID omitido propositalmente para o SQLite auto-incrementar
             Maquina.objects.create(
@@ -431,7 +463,10 @@ def salvar_maquina(request):
                 descricao=descricao, 
                 status=status
             )
-            
+            LogAuditoria.objects.create(
+                usuario=request.user, modulo='MÁQUINAS', acao='CRIADO',
+                descricao=f"Cadastrou a nova máquina '{maquina}'."
+            )
         messages.success(request, "Máquina salva com sucesso!")
     return redirect('/gerenciamento/?aba=aba-maquinas')
 
@@ -467,6 +502,12 @@ def salvar_item_molde(request):
             obj.linha = linha
             obj.status = status
             obj.save()
+            LogAuditoria.objects.create(
+                usuario=request.user,
+                modulo='ITENS',
+                acao='EDITADO',
+                descricao=f'Alterou o item {item_codigo} (ID: {id_reg}). Status atual: {status}.'
+            )
             messages.success(request, "Item de molde atualizado com sucesso!")
             
         else: # Fluxo de NOVO CADASTRO
@@ -477,6 +518,12 @@ def salvar_item_molde(request):
                 cod_complementar=cod_complementar,
                 linha=linha,
                 status=status
+            )
+            LogAuditoria.objects.create(
+                usuario=request.user,
+                modulo='ITENS',
+                acao='CRIADO',
+                descricao=f'Criou o item {item_codigo} (ID: {item_codigo.id_item}). Status: {status}.'
             )
             messages.success(request, "Novo item cadastrado com sucesso!")
             
@@ -495,13 +542,39 @@ def salvar_colaborador(request):
             obj.funcao = funcao
             obj.status = status
             obj.save()
+            LogAuditoria.objects.create(
+                usuario=request.user, modulo='COLABORADORES', acao='EDITADO',
+                descricao=f"Alterou o colaborador '{nome}' (ID: {id_reg}). Status: {status}."
+            )
             messages.success(request, "Colaborador atualizado com sucesso!")
         else: # Se não tem ID, o SQLite gera o próximo automaticamente
             Colaborador.objects.create(nome=nome, funcao=funcao, status=status)
+            LogAuditoria.objects.create(
+                usuario=request.user, modulo='COLABORADORES', acao='CRIADO',
+                descricao=f"Cadastrou o novo colaborador '{nome}'."
+            )
             messages.success(request, "Novo colaborador cadastrado com sucesso!")
             
     return redirect('/gerenciamento/?aba=aba-colaboradores') # Corrigido aqui!
 
+def carregar_itens_por_molde(request):
+    # Recebe o ID do molde que o JavaScript enviou
+    molde_id = request.GET.get('molde_id')
+    
+    # Filtra os itens que pertencem a esse molde e que TÊM código complementar
+    itens = ItemPorMolde.objects.filter(
+        molde_id=molde_id
+    ).exclude(cod_complementar__isnull=True).exclude(cod_complementar__exact='')
+    
+    # Monta uma listinha simples para o JavaScript entender
+    dados = []
+    for item in itens:
+        dados.append({
+            'id': item.id_item,
+            'texto': f"{item.cod_complementar}"
+        })
+        
+    return JsonResponse(dados, safe=False)
 
 def salvar_problema(request):
     if request.method == 'POST':
@@ -514,11 +587,19 @@ def salvar_problema(request):
             obj.problema = texto_problema
             obj.descricao = texto_descricao
             obj.save()
+            LogAuditoria.objects.create(
+                usuario=request.user, modulo='PROBLEMAS', acao='EDITADO',
+                descricao=f"Alterou o problema '{texto_problema}' (ID: {id_reg})."
+            )
             messages.success(request, "Problema atualizado com sucesso!")
         else:
             Problema.objects.create(
                 problema=texto_problema, 
                 descricao=texto_descricao     # Grava na coluna física descricao
+            )
+            LogAuditoria.objects.create(
+                usuario=request.user, modulo='PROBLEMAS', acao='CRIADO',
+                descricao=f"Cadastrou o novo problema '{texto_problema}'."
             )
             messages.success(request, "Novo problema cadastrado com sucesso!")
             
@@ -534,9 +615,17 @@ def salvar_acao(request):
             obj = get_object_or_404(AcaoManutencao, id=id_reg)
             obj.acao = acao
             obj.save()
+            LogAuditoria.objects.create(
+                usuario=request.user, modulo='AÇÕES TÉCNICAS', acao='EDITADO',
+                descricao=f"Alterou a ação '{acao}' (ID: {id_reg})."
+            )
             messages.success(request, "Ação técnica atualizada com sucesso!")
         else:
             AcaoManutencao.objects.create(acao=acao)
+            LogAuditoria.objects.create(
+                usuario=request.user, modulo='AÇÕES TÉCNICAS', acao='CRIADO',
+                descricao=f"Cadastrou a nova ação '{acao}'."
+            )
             messages.success(request, "Nova ação técnica cadastrada com sucesso!")
             
     return redirect('/gerenciamento/?aba=aba-acoes')
@@ -571,6 +660,10 @@ def salvar_usuario(request):
                         funcao=nome_grupo,
                         status='Ativo'
                     )
+                    LogAuditoria.objects.create(
+                        usuario=request.user, modulo='USUÁRIOS', acao='CRIADO',
+                        descricao=f"Cadastrou o novo usuário/colaborador '{nome_completo}' (Login: {username_novo})."
+                    )
                     messages.success(request, f'✅ Usuário "{nome_completo}" cadastrado!')
 
             except Exception as e:
@@ -586,6 +679,10 @@ def salvar_usuario(request):
             else:
                 user_alvo.is_active = not user_alvo.is_active
                 user_alvo.save()
+                LogAuditoria.objects.create(
+                    usuario=request.user, modulo='USUÁRIOS', acao='STATUS ALTERADO',
+                    descricao=f"Alterou o status do usuário '{user_alvo.username}' (ID: {user_id})."
+                )
                 messages.success(request, 'Status do usuário modificado!')
                 
     return redirect('/gerenciamento/?aba=aba-usuarios')
