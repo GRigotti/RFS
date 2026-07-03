@@ -102,17 +102,38 @@
         /* =========================================
        RESPONSIVIDADE INTERNA (MONITORES MENORES)
        ========================================= */
-        @media (max-width: 1250px) {
+        @media (max-width: 1366px) {
+            .card-grafico, .card-itens {
+                height: auto;
+                max-height: none;
+            }
+
+            body {
+            zoom: 80%; 
+            } 
+            /* Ajuste opcional: Garante que os modais continuem centralizados ao usar o zoom */
+            .modal-overlay {
+                zoom: 1.25; /* Compensa o zoom do body para que a tela preta de fundo ocupe 100% da tela real */
+            }
+            .modal-content {
+                zoom: 100%; /* Aplica o encolhimento na caixinha branca do modal */
+            }  
+        }
+
+        @media (max-width: 1280px) {
             .dash-inner-split {
                 flex-direction: column; /* Faz os itens e o gráfico empilharem verticalmente APENAS dentro da esquerda */
             }
+
             .card-grafico, .card-itens {
                 height: auto;
                 max-height: none;
             }
         }
+
+
         /* ==========================================================================
-           2. 📱 RESPONSIVIDADE PARA CELULARES (ATÉ 768PX) - FIM DA BAGUNÇA
+           2. 📱 RESPONSIVIDADE PARA CELULARES (ATÉ 768PX)
            ========================================================================== */
         @media (max-width: 768px) {
             .header {
@@ -286,6 +307,17 @@
 
     </header>
 
+    <head>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    </head>
+
+    <body>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        
+        {% block extra_scripts %}{% endblock %}
+    </body>
+    
     <!-- Alterado titulos de elementos da navegação -->
     <nav class="nav-tabs-container">
         <a href="{% url 'ferramentaria:dashboard' %}" class="nav-tab-link" id="nav-dash">📊 Home</a>

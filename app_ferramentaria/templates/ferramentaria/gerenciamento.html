@@ -255,45 +255,53 @@
                     <th style="text-align: center;">Ações</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for u in usuarios_sistema %}
-                <tr{% if not u.is_active %} style="background-color: #f8d7da;"{% endif %}>
-                    <td style="font-weight: bold;">{{ u.username }}</td>
-                    <td>
-                        {% if u.colaborador %}
-                            {{ u.colaborador.nome }}
-                        {% else %}
-                            <span style="color: #999; font-style: italic;">Sem Vínculo</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if u.colaborador %}
-                            {{ u.colaborador.funcao }}
-                        {% else %}
-                            {% if u.is_superuser %}Admin Master{% else %}Padrão{% endif %}
-                        {% endif %}
-                    </td>
-                    <td>
+            {% for u in usuarios_sistema %}
+            <tr{% if not u.is_active %} style="background-color: #f8d7da;"{% endif %}>
+                <td style="font-weight: bold;">{{ u.username }}</td>
+                <td>
+                    {% if u.colaborador %}
+                        {{ u.colaborador.nome }}
+                    {% else %}
+                        <span style="color: #999; font-style: italic;">Sem Vínculo</span>
+                    {% endif %}
+                </td>
+                
+                <td>
+                    <form method="POST" action="{% url 'ferramentaria:salvar_usuario' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="tipo_acao" value="alterar_funcao">
+                        <input type="hidden" name="user_id" value="{{ u.id }}">
+                        
+                        <select name="grupo" onchange="this.form.submit()" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+                            <option value="Admin" {% if u.groups.all.0.name == 'Admin' %}selected{% endif %}>Admin</option>
+                            <option value="Ferramenteiro" {% if u.groups.all.0.name == 'Ferramenteiro' %}selected{% endif %}>Ferramenteiro</option>
+                            <option value="Operador" {% if u.groups.all.0.name == 'Operador' %}selected{% endif %}>Operador</option>
+                        </select>
+                    </form>
+                </td>
+
+                <td>
+                    {% if u.is_active %}
+                        <span style="color: #28a745; font-weight: bold;">Ativo</span>
+                    {% else %}
+                        <span style="color: #dc3545; font-weight: bold;">Inativo</span>
+                    {% endif %}
+                </td>
+                
+                <td style="text-align: center;">
+                    <form method="POST" action="{% url 'ferramentaria:salvar_usuario' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="tipo_acao" value="alternar_status_usuario">
+                        <input type="hidden" name="user_id" value="{{ u.id }}">
                         {% if u.is_active %}
-                            <span style="color: #28a745; font-weight: bold;">Ativo</span>
+                            <button type="submit" class="btn-general" style="background-color: #dc3545; color: white; border: none; cursor: pointer; padding: 5px 10px; border-radius: 4px;">🚫 Inativar</button>
                         {% else %}
-                            <span style="color: #dc3545; font-weight: bold;">Inativo</span>
+                            <button type="submit" class="btn-general" style="background-color: #28a745; color: white; border: none; cursor: pointer; padding: 5px 10px; border-radius: 4px;">✅ Ativar</button>
                         {% endif %}
-                    </td>
-                    <td style="text-align: center;">
-                        <form method="POST" action="{% url 'ferramentaria:salvar_usuario' %}" style="display: inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="tipo_acao" value="alternar_status_usuario">
-                            <input type="hidden" name="user_id" value="{{ u.id }}">
-                            {% if u.is_active %}
-                                <button type="submit" class="btn-general btn-edit" style="background-color: #dc3545; border: none; cursor: pointer;">🚫 Inativar</button>
-                            {% else %}
-                                <button type="submit" class="btn-general btn-edit" style="background-color: #28a745; border: none; cursor: pointer;">✅ Ativar</button>
-                            {% endif %}
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
             </tbody>
         </table>
     </div>
@@ -447,9 +455,9 @@
                 
                 <label>Cargo / Nível de Acesso:</label>
                 <select name="grupo" required>
-                    <option value="Operador">Operador (Abre OS / Visualiza Dash)</option>
-                    <option value="Ferramenteiro">Ferramenteiro (Abre e Edita OS / Visualiza Dash)</option>
-                    <option value="Admin">Administrador (Acesso Total + Gerenciamento)</option>
+                    <option value="Operador">Operador </option>
+                    <option value="Ferramenteiro">Ferramenteiro </option>
+                    <option value="Admin">Administrador </option>
                 </select><br><br>
                 
                 <button type="submit" class="btn-general btn-submit">Salvar Acesso</button>
