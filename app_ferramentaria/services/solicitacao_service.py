@@ -6,7 +6,7 @@ class SolicitacaoService:
     
     @staticmethod
     @transaction.atomic
-    def abrir_solicitacao(molde_id, maquina_id, item_id, operador_id, ordem_manutencao, parecer_producao, lista_problemas_ids=None, usuario_logado=None):
+    def abrir_solicitacao(molde_id, maquina_id, item_id, operador_id, ordem_manutencao, parecer_producao, lista_problemas_ids=None, usuario_logado=None, ultima_contagem=None, ciclo_momento=None):
         nova_os = SolicitacaoManutencao.objects.create(
             molde_id=molde_id,
             maquina_id=maquina_id,
@@ -15,6 +15,8 @@ class SolicitacaoService:
             ordem_manutencao=ordem_manutencao,
             parecer_producao=parecer_producao,
             status='Aberto',
+            ultima_contagem=ultima_contagem,
+            ciclo_momento=ciclo_momento
         )
         
         if lista_problemas_ids:
@@ -35,7 +37,8 @@ class SolicitacaoService:
 
         os_obj.responsavel_id = responsavel_id if responsavel_id else None
         os_obj.parecer_ferramentaria = parecer_ferramentaria
-        os_obj.status = novo_status  
+        if novo_status:  
+            os_obj.status = novo_status
         os_obj.motivo_manutencao = motivo
         os_obj.previsao_retorno = previsao
 

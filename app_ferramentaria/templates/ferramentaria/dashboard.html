@@ -344,13 +344,19 @@
             <div class="dash-inner-split" style="display: flex; gap: 20px; width: 100%;">
                 
                 <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 130px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box;">
-                    <h4 style="color: #666; margin: 0 0 8px 0; text-transform: uppercase; font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px;">Contagem de Ciclos / Batidas</h4>
-                    <div style="font-size: 2.5rem; font-weight: bold; color: #004B78; line-height: 1;">--</div>
-                    <span style="font-size: 0.75rem; color: #999; font-style: italic; margin-top: 8px;">Aguardando integração de sensores IoT com a API</span>
+                    <h4 style="color: #666; margin: 0 0 8px 0; text-transform: uppercase; font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px;">Contagem de Ciclos</h4>
+                    
+                    <div style="font-size: 2.5rem; font-weight: bold; color: #004B78; line-height: 1;">
+                        {{ molde_selecionado.ciclos|default:"0" }}
+                    </div>
+                    
+                    <span style="font-size: 0.75rem; color: #004B78; font-style: italic; margin-top: 8px;">
+                        Atualizado com base nos apontamentos de produção
+                    </span>
                 </div>
 
                 <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 20px; min-height: 130px; box-sizing: border-box;">
-                    <span style="font-size: 2.2rem; line-height: 1;">📍</span>
+                    <!--span style="font-size: 2.2rem; line-height: 1;">📍</span-->
                     <div style="text-align: left;">
                         <h4 style="color: #666; margin: 0; text-transform: uppercase; font-size: 0.85rem; font-weight: bold; letter-spacing: 0.5px;">Endereço / Prateleira</h4>
                         <div style="font-size: 1.6rem; font-weight: bold; color: #004B78; margin-top: 5px; text-transform: uppercase;">
@@ -417,6 +423,8 @@
                     data-IN="{{ os.item.cod_complementar|default:'-' }}"
                     data-data="{{ os.data_abertura|date:'d/m/Y H:i' }}"
                     data-maquina="{{ os.maquina.maquina }}"
+                    data-ultima-contagem="{{ os.ultima_contagem }}"
+                    data-ciclos-atuais="{{ os.ciclo_momento }}"
                     data-operador="{{ os.operador.nome }}"
                     data-motivo="{{ os.motivo_manutencao|default:'' }}"
                     data-previsao="{{ os.previsao_retorno|date:'Y-m-d'|default:'' }}"
@@ -497,6 +505,13 @@
                 </select>
             </div>
 
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="color: #004B78; font-weight: bold; font-size: 0.95rem; display: block; margin-bottom: 5px;">
+                    Quantidade Produzidas:
+                </label>
+                <input type="number" name="pecas_produzidas" min="0" placeholder="Ex: 15000" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box; font-size: 1rem;">
+            </div>
+
             <div class="form-group">
                 <label>Operador / Solicitante</label>
                 <select name="operador_id" required>
@@ -561,6 +576,16 @@
             <div style="margin-bottom: 4px;"><strong>Molde:</strong> <span id="detalhe-molde"></span></div>
             <div style="margin-bottom: 4px;"><strong>IN:</strong> <span id="detalhe-in"></span></div>
             <div style="margin-bottom: 4px;"><strong>Máquina:</strong> <span id="detalhe-maquina"></span></div>
+            <div style="display: flex; justify-content: space-between; background-color: #e9f2f9; padding: 10px 15px; border-radius: 4px; border: 1px solid #c2dced; margin: 10px 0;">
+                <div style="font-size: 0.9rem;">
+                    <strong style="color: #004B78;">Quantidade Produzida:</strong> 
+                    <span id="detalhe-ultima-contagem" style="color: #d9534f; font-weight: bold; font-size: 1rem;">--</span>
+                </div>
+                <div style="font-size: 0.9rem;">
+                    <strong style="color: #004B78;">Ciclos Totais:</strong> 
+                    <span id="detalhe-ciclos-atuais" style="font-weight: bold; font-size: 1rem;">--</span>
+                </div>
+            </div>
             <div style="margin-bottom: 4px;"><strong>Operador:</strong> <span id="detalhe-operador"></span></div>
             <div style="margin-bottom: 4px;"><strong>OM:</strong> <span id="detalhe-om"></span></div> 
             <div style="margin-bottom: 4px; color: #c9302c;"><strong>Problemas:</strong> <span id="detalhe-problemas" style="font-weight: bold;"></span></div>
@@ -649,6 +674,8 @@
         var parecerProd = elementoClicado.getAttribute('data-parecer-prod');
         var motivo = elementoClicado.getAttribute('data-motivo');
         var previsao = elementoClicado.getAttribute('data-previsao');
+        var ultimaContagem = elementoClicado.getAttribute('data-ultima-contagem');
+        var ciclosAtuais = elementoClicado.getAttribute('data-ciclos-atuais');
 
         // Injeta os dados nos spans informativos do modal
         document.getElementById('detalhe-id').innerText = id;
@@ -662,12 +689,35 @@
         //document.getElementById('detalhe-dataop').innerText = dataop;
         document.getElementById('detalhe-problemas').innerText = problemas;
         document.getElementById('detalhe-parecer-prod').innerText = parecerProd;
+        document.getElementById('detalhe-ultima-contagem').innerText = ultimaContagem;
+        document.getElementById('detalhe-ciclos-atuais').innerText = ciclosAtuais;
        
 
         // Seta o ID da OS no input hidden para enviar via POST correto
         document.getElementById('input-os-id').value = id;
-        var statusAtual = elementoClicado.getAttribute('data-status');
-        document.getElementById('detalhe-status').value = statusAtual || "Aberto";
+        var statusAtual = elementoClicado.getAttribute('data-status') || "Aberto";
+        var selectStatusDash = document.getElementById('detalhe-status');
+        var opcaoExisteDash = false;
+        
+        // 1. Verifica se a opção já existe
+        for (var i = 0; i < selectStatusDash.options.length; i++) {
+            if (selectStatusDash.options[i].value === statusAtual) {
+                opcaoExisteDash = true;
+                break;
+            }
+        }
+        
+        // 2. Cria a opção invisível se não existir
+        if (!opcaoExisteDash) {
+            var novaOpcaoDash = document.createElement('option');
+            novaOpcaoDash.value = statusAtual;
+            novaOpcaoDash.text = statusAtual;
+            novaOpcaoDash.style.display = 'none';
+            selectStatusDash.add(novaOpcaoDash);
+        }
+        
+        // 3. Aplica o valor com sucesso
+        selectStatusDash.value = statusAtual;
 
         var inputMotivo = document.getElementById('motivo_manutencao');
         var inputPrevisao = document.getElementById('previsao_retorno');

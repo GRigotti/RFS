@@ -59,3 +59,11 @@ Versão 0.5.2
     Geral:
     Adicionado logs para controlar login, Solicitações, usuarios, moldes, itens, maquinas, problemas, ações.
 
+Versão 0.5.3
+
+    Removido arquvios de teste
+
+Versão 0.6 
+
+    Modificado estrutura dos arquivos
+

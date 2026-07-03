@@ -9,6 +9,8 @@ class Molde(models.Model):
     molde_nome = models.CharField(max_length=100, db_column='molde_nome')
     endereco_molde = models.CharField(max_length=50, db_column='endereco_molde')
     status = models.CharField(max_length=20, db_column='status')
+    cavidades = models.IntegerField(default=1, verbose_name="Número de Cavidades", help_text="Quantidade de peças geradas por cada batida do molde." )
+    ciclos = models.IntegerField(default=0, verbose_name="Contagem de Ciclos (Batidas)", help_text="Total acumulado de batidas deste molde.")
 
     class Meta:
         managed = False # Informa ao Django: "Não crie esta tabela, ela já existe"
@@ -91,6 +93,8 @@ class SolicitacaoManutencao(models.Model):
     item = models.ForeignKey(ItemPorMolde, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Item / IN")
     motivo_manutencao = models.CharField(max_length=255, null=True, blank=True, verbose_name="Motivo (Em Manutenção)")
     previsao_retorno = models.DateField(null=True, blank=True, verbose_name="Previsão de Retorno")
+    ultima_contagem = models.IntegerField(default=0, verbose_name="Última Contagem de Peças Produzidas")
+    ciclo_momento = models.IntegerField(default=0, verbose_name="Ciclos do Molde na Abertura da OS")
 
     # Mapeamento exato das suas tabelas de ligação originais
     problemas = models.ManyToManyField(Problema, through='SolicitacaoProblema')

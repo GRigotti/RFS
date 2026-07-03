@@ -7,9 +7,10 @@ from django.db.models import Count
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.http import JsonResponse
+from django.db import transaction
 
 from ..models import ItemPorMolde, Molde, Maquina, Colaborador, Problema, AcaoManutencao, SolicitacaoManutencao
-from ..services import SolicitacaoService
+from ..services import SolicitacaoService, MoldeService
 
 @never_cache
 @login_required(login_url='ferramentaria:login')
@@ -45,14 +46,33 @@ def dashboard_view(request):
             if SolicitacaoManutencao.objects.filter(molde_id=molde_id).exclude(status='Concluído').exists():
                 messages.error(request, '⚠️ Operação cancelada: Este molde já possui uma manutenção em andamento!')
                 return redirect(request.META.get('HTTP_REFERER', '/')) 
+            
 
-            SolicitacaoService.abrir_solicitacao(
-                molde_id=molde_id, maquina_id=request.POST.get('maquina_id'),
-                operador_id=request.POST.get('operador_id'), ordem_manutencao=request.POST.get('ordem_manutencao'),
-                parecer_producao=request.POST.get('parecer_producao'), lista_problemas_ids=request.POST.getlist('problemas_ids'),
-                item_id=request.POST.get('inValor'), usuario_logado=request.user
-            )
-            messages.success(request, "Solicitação registrada com sucesso!")
+            pecas_str = request.POST.get('pecas_produzidas', '0')
+            try:
+                pecas_produzidas = int(pecas_str) if pecas_str else 0
+            except ValueError:
+                pecas_produzidas = 0
+            try:
+                with transaction.atomic():
+                    MoldeService.adicionar_ciclos_por_pecas(
+                        molde_id=molde_id, 
+                        pecas_produzidas=pecas_produzidas,
+                        usuario_logado=request.user # 🟢 Passando o usuário para o Log
+                    )
+
+                    moldes_ciclo = Molde.objects.get(id=molde_id)
+
+                    SolicitacaoService.abrir_solicitacao(
+                        molde_id=molde_id, maquina_id=request.POST.get('maquina_id'),
+                        operador_id=request.POST.get('operador_id'), ordem_manutencao=request.POST.get('ordem_manutencao'),
+                        parecer_producao=request.POST.get('parecer_producao'), lista_problemas_ids=request.POST.getlist('problemas_ids'),
+                        item_id=request.POST.get('inValor'), usuario_logado=request.user, ultima_contagem=pecas_produzidas,ciclo_momento=moldes_ciclo.ciclos
+                    )
+                messages.success(request, "Solicitação registrada com sucesso!")
+            except Exception as e:
+                # Opcional: Se algo der errado no banco, exibe mensagem e cancela a operação
+                messages.error(request, f"Erro ao registrar solicitação: {str(e)}")
             return redirect('ferramentaria:dashboard')
         
         elif tipo_acao == 'registrar_manutencao':
