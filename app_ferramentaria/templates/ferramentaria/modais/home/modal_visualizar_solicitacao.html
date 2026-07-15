@@ -1,0 +1,93 @@
+<div id="modalVisualizarOS" class="modal-overlay">
+    <div class="modal-content" style="width: 500px;">
+        <span class="modal-close" onclick="fecharModal('modalVisualizarOS')">&times;</span>
+        <h2>Tratar Pendência</h2>
+        <hr style="margin-bottom: 15px;">
+        
+        <div style="background-color: #f4f6f9; border-left: 4px solid #004B78; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 0.9rem; color: #333;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <span><strong>OS Nº:</strong> <span id="detalhe-id"></span></span>
+                <span><strong>Abertura:</strong> <span id="detalhe-data"></span></span>
+            </div>
+            <div style="margin-bottom: 4px;"><strong>Molde:</strong> <span id="detalhe-molde"></span></div>
+            <div style="margin-bottom: 4px;"><strong>IN:</strong> <span id="detalhe-in"></span></div>
+            <div style="margin-bottom: 4px;"><strong>Máquina:</strong> <span id="detalhe-maquina"></span></div>
+            <div style="display: flex; justify-content: space-between; background-color: #e9f2f9; padding: 10px 15px; border-radius: 4px; border: 1px solid #c2dced; margin: 10px 0;">
+                <div style="font-size: 0.9rem;">
+                    <strong style="color: #004B78;">Quantidade Produzida:</strong> 
+                    <span id="detalhe-ultima-contagem" style="color: #d9534f; font-weight: bold; font-size: 1rem;">--</span>
+                </div>
+                <div style="font-size: 0.9rem;">
+                    <strong style="color: #004B78;">Ciclos Totais:</strong> 
+                    <span id="detalhe-ciclos-atuais" style="font-weight: bold; font-size: 1rem;">--</span>
+                </div>
+            </div>
+            <div style="margin-bottom: 4px;"><strong>Operador:</strong> <span id="detalhe-operador"></span></div>
+            <div style="margin-bottom: 4px;"><strong>OM:</strong> <span id="detalhe-om"></span></div> 
+            <div style="margin-bottom: 4px; color: #c9302c;"><strong>Problemas:</strong> <span id="detalhe-problemas" style="font-weight: bold;"></span></div>
+            <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed #ccc; font-style: italic;">
+                <strong>Parecer Prod:</strong> <span id="detalhe-parecer-prod"></span>
+            </div>
+        </div>
+        
+        <form method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="tipo_acao" value="registrar_manutencao">
+            <input type="hidden" name="os_id" id="input-os-id">
+            
+            <div class="form-group">
+                <label>Responsável Técnico</label>
+                <select name="responsavel_id" class="select2-modal" {% if not pode_editar %}disabled{% endif %} required">
+                    <option value="">Selecione o Ferramenteiro...</option>
+                    {% for ferram in lista_ferramenteiros %}
+                        <option value="{{ ferram.id }}">{{ ferram.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>AÇÕES REALIZADAS</label>
+                <div class="grid-check-container">
+                    {% for item in lista_acoes_manutencao %}
+                        <label class="checkbox-container-label">
+                            <input type="checkbox" name="acoes_realizadas_ids" value="{{ item.id }}" {% if not pode_editar %}disabled{% endif %}>
+                            {{ item.acao }} 
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Parecer Técnico / Observações</label>
+                <textarea name="parecer_ferramentaria" rows="2" {% if not pode_editar %}disabled{% endif %} placeholder="Detalhes técnicos..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Status do Atendimento</label>
+                <select name="novo_status" id="detalhe-status" class="select2-modal" {% if not pode_editar %}disabled{% endif %} required onchange="toggleManutencao()" required>
+                    <option value="Em Manutenção">Em Manutenção</option>
+                    <option value="Concluído">Concluído</option>
+                </select>
+            </div>
+
+            <div id="bloco-em-manutencao" style="display: none; background: #fff3cd; padding: 12px; border-radius: 4px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="color: #856404;">Previsão</label>
+                    <input type="date" name="previsao_retorno" id="previsao_retorno" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" {% if not pode_editar %}disabled{% endif %}>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="color: #856404;">Aguardando por:</label>
+                    <input type="text" name="motivo_manutencao" id="motivo_manutencao" placeholder="Ex: Aguardando compra de peça..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" {% if not pode_editar %}disabled{% endif %}>
+                </div>
+            </div>
+            
+            {% if pode_editar %}
+                <button type="submit" class="btn-submit" style="background-color: #004B78; width: 100%; margin-top: 10px;">
+                    Registrar Manutenção
+                </button>
+            {% else %}
+                <p style="color: #777; text-align: center; margin-top: 10px;"><em>* Apenas ferramentaria pode alterar este status.</em></p>
+            {% endif %}
+        </form>
+    </div>
+</div>

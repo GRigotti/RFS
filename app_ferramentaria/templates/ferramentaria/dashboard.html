@@ -1,292 +1,18 @@
 {% extends 'ferramentaria/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+        <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
 
 {% block content %}
-<style>
-    /* =========================================
-       LAYOUT PRINCIPAL DA PÁGINA (70% / 30%)
-       ========================================= */
-    .dash-container {
-        display: flex;
-        gap: 20px;
-        width: 100%;
-        align-items: stretch;
-    }
-
-    /* Coluna da Esquerda - Ocupa 70% */
-    .dash-left {
-        flex: 7;
-        min-width: 0; /* CRÍTICO: Impede que o gráfico estufe e empurre o painel direito para baixo */
-        background-color: #868686;
-        border-radius: 8px;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    /* Coluna da Direita - Ocupa 30% */
-    .dash-right {
-        flex: 3;
-        min-width: 290px; /* Garante tamanho mínimo ideal para leitura das pendências */
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    /* =========================================
-       SUB-LAYOUT INTERNO (ITEMS + GRÁFICO)
-       ========================================= */
-    .dash-inner-split {
-        display: flex;
-        gap: 20px;
-        width: 100%;
-    }
-
-    .card-itens, .card-grafico {
-        flex: 1;
-        min-width: 0; /* Mantém o isolamento de tamanho para o Chart.js */
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    .card-itens {
-        max-height: 380px;
-        overflow-y: auto;
-    }
-
-    .card-grafico {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        height: 380px;
-    }
-
-    .chart-container {
-        position: relative;
-        width: 100%;
-        height: 280px; /* Mantém o tamanho do gráfico sob controle estrito */
-    }
-
-    /* =========================================
-       COMPONENTES VISUAIS (BOTÕES E LISTAS)
-       ========================================= */
-    .btn-reg {
-        background-color: #004B78;
-        color: white;
-        border: none;
-        padding: 25px 20px;
-        font-size: 1.4rem;
-        font-weight: bold;
-        border-radius: 8px;
-        cursor: pointer;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: 0.2s;
-    }
-    .btn-reg:hover { background-color: #11273d; }
-
-    
-    /* Força fundo branco e letra preta na lista suspensa do Select2 */
-    .select2-container--default .select2-results__option {
-        color: #000000 !important;
-        background-color: #ffffff !important;
-    }
-
-    /* Cor de fundo quando você passa o mouse por cima (azul padrão do seu layout) */
-    .select2-container--default .select2-results__option--highlighted[aria-selected] {
-        background-color: #004B78 !important;
-        color: #ffffff !important;
-    }
-
-    /* Cor do texto do item selecionado na caixinha */
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        color: #000000 !important;
-        font-weight: bold;
-    }
-
-
-    /* =========================================
-       ESTRUTURA DA CAIXA "EM ABERTO" (TABELA)
-       ========================================= */
-    .pendencias-box {
-        flex: 1;
-        background-color: #868686;
-        border-radius: 8px;
-        padding: 15px;
-        color: #3b2826;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        overflow-y: auto;
-    }
-    .pendencias-box h3 {
-        text-align: center;
-        margin-bottom: 15px;
-        font-size: 1.4rem;
-    }
-
-    /* Cabeçalho alinhado com as colunas de baixo */
-    .pendencias-header {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        justify-content: space-between !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-        font-size: 0.8rem;
-        font-weight: bold;
-        border-bottom: 1px solid rgba(0,0,0,0.2);
-        padding: 0 5px 5px 5px;
-        margin-bottom: 10px;
-    }
-
-    .lista-pendencias {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        width: 100% !important;
-        display: block !important;
-    }
-    
-    .item-pendencia {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-        padding: 12px 5px;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
-        cursor: pointer;
-        transition: 0.2s;
-        font-size: 0.9rem;
-        overflow: hidden !important;
-    }
-    .item-pendencia:hover { background-color: rgba(255,255,255,0.2); }
-
-    /* COLUNA 1: Molde ocupa 22% */
-    .col-molde {
-        flex: 0 0 22% !important;
-        width: 22% !important;
-        max-width: 22% !important;
-        font-weight: bold;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    /* COLUNA 2: Problema ocupa 58% e alinha o indicativo com o texto */
-    .col-prob {
-        flex: 0 0 58% !important;
-        width: 58% !important;
-        max-width: 58% !important;
-        padding: 0 5px;
-        display: flex !important;
-        align-items: center !important;
-        gap: 6px;
-        overflow: hidden;
-        white-space: nowrap;
-    }
-
-    .col-prob-texto {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        display: inline-block;
-    }
-
-    /* COLUNA 3: Data ocupa 20% e joga para a direita */
-    .col-data {
-        flex: 0 0 20% !important;
-        width: 20% !important;
-        max-width: 20% !important;
-        text-align: right;
-        white-space: nowrap;
-    }
-
-    /* MINI INDICATIVOS (BADGES) SUPER COMPACTOS */
-    .badge-status {
-        padding: 2px 4px !important;
-        border-radius: 3px !important;
-        font-size: 0.65rem !important;
-        font-weight: bold !important;
-        color: white !important;
-        white-space: nowrap !important;
-        display: inline-block !important;
-        line-height: 1 !important;
-    }
-    .badge-nova { background-color: #d9534f !important; }
-    .badge-manutencao { background-color: #2b3a4a !important; }
-
-    /* CORREÇÃO DOS CHECKBOXES: Força tamanho nativo automático */
-    .form-group input[type="checkbox"] {
-        width: auto !important;
-        height: auto !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        cursor: pointer;
-    }
-
-    /* Alinhamento lateral perfeito entre o quadradinho e o texto */
-    .checkbox-container-label {
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-        font-weight: normal !important;
-        margin-bottom: 8px;
-        cursor: pointer;
-    }
-
-    /* =========================================
-       ESTILOS DOS MODAIS (JANELAS POP-UP)
-       ========================================= */
-    .modal-overlay {
-        display: none;
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.6);
-        z-index: 1000;
-        justify-content: center;
-        align-items: center;
-    }
-    .modal-content {
-        background: white;
-        padding: 25px;
-        border-radius: 8px;
-        width: 450px;
-        max-width: 90%;
-        position: relative;
-        max-height: 85vh; /* Não deixa o modal passar de 85% da altura do monitor */
-        overflow-y: auto; /* Cria uma barra de rolagem interna se os campos não couberem */
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
-    .modal-close { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #aaa; }
-    .modal-close:hover { color: #333; }
-    
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
-    
-    /* 🟢 AQUI ESTÁ A MUDANÇA CRÍTICA: O :not([type="checkbox"]) impede que esta regra quebre as caixas de seleção */
-    .form-group input:not([type="checkbox"]), .form-group select, .form-group textarea { 
-        width: 100%; 
-        padding: 8px; 
-        border: 1px solid #ccc; 
-        border-radius: 4px; 
-    }
-    
-    .btn-submit { background-color: #28a745; color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold; }
-    .btn-submit:hover { background-color: #218838; }
-
-   
-
-</style>
 
 <div style="background: #868686; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; margin-bottom: 20px;">
     <form method="GET" action="" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; width: 100%; margin: 0; padding: 0;">
         
-        {% if molde_selecionado %}
+        <!--{% if molde_selecionado %}
             <input type="hidden" name="molde" value="{{ molde_selecionado.id }}">
-        {% endif %}
+        {% endif %}--->
         <!--- Modificado titulo para maior clareza e adicionado contadores de solicitações abertas e concluídas no período -->
         <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
             <h3 style="color: #004B78; font-size: 1.15rem; font-weight: bold; margin: 0; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
@@ -328,12 +54,14 @@
                 <input type="hidden" name="data_inicio" value="{{ data_inicio_filtro }}">
                 <input type="hidden" name="data_fim" value="{{ data_fim_filtro }}">
                 
-                <label style="color: white; font-weight: bold; font-size: 1.1rem; white-space: nowrap; margin: 0;">Analisar Molde:</label>
-                <div id="wrapper-select" style="flex: 1; position: relative;">
-                    <select id="select-molde" name="molde" onchange="this.form.submit()" style="width: 100%; padding: 10px; border-radius: 4px; border: none; font-size: 1rem; font-weight: bold; color: #333; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
-                        <option value="">-- Selecione um Molde para Analisar --</option>
-                        {% for m in moldes %}
-                            <option value="{{ m.id }}" {% if molde_selecionado.id == m.id %}selected{% endif %}>{{ m.molde_nome }}</option>
+                <label style="color: white; font-weight: bold; font-size: 1.1rem; white-space: nowrap; margin: 0;">Molde:</label>
+                <!--div id="wrapper-select" style="flex: 1; position: relative;"-->
+                <div style="flex: 1; min-width: 250px;">
+                    <select id="select-molde" name="molde" class="filtro-pesquisa">
+                        <option value=""></option> {% for molde in moldes %}
+                            <option value="{{ molde.id }}" {% if molde_selecionado and molde_selecionado.id == molde.id %}selected{% endif %}>
+                                {{ molde.molde_nome }}
+                            </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -403,7 +131,7 @@
     <div class="dash-right" style="flex: 3; min-width: 290px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box;">
 
     
-        <button class="btn-reg" onclick="abrirModal('modalNovaOS')">
+         <button class="btn-reg" onclick="abrirNovaSolicitacao()">
             Reg Solicitação
         </button>
 
@@ -433,7 +161,7 @@
                     data-parecer-prod="{{ os.parecer_producao|default:'Nenhum parecer informado.' }}"
                     data-problemas="{% for prob in os.problemas.all %}{{ prob.problema }}{% if not forloop.last %}, {% endif %}{% empty %}Relato textual{% endfor %}"
                     data-status="{{ os.status }}"
-                    onclick="abrirModalDetalhes(this)">
+                    onclick="abrirModalVisualizar(this)">
                     
                     <span class="col-molde">{{ os.molde.molde_nome }}</span>
                     
@@ -463,204 +191,43 @@
     </div>
 </div>
 
-<div id="modalNovaOS" class="modal-overlay">
-    <div class="modal-content">
-        <span class="modal-close" onclick="fecharModal('modalNovaOS')">&times;</span>
-        <h2>Nova Solicitação</h2>
-        <hr style="margin-bottom: 15px;">
-        
-        <form method="POST" action="">
-            {% csrf_token %}
-            <input type="hidden" name="tipo_acao" value="nova_solicitacao">
-            
-            <div class="form-group">
-                <label>Molde</label>
-                <select name="molde_id" required>
-                    <option value="">Selecione o Molde...</option>
-                    {% for molde in lista_moldes %}
-                        <option value="{{ molde.id }}">{{ molde.molde_nome }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>IN</label>
-                <select name="inValor" class="form-control" required>
-                    <option value="">Selecione o IN (Opcional)...</option>
-                    {% for item in itens_molde %}
-                        {% if item.cod_complementar %}
-                            <option value="{{ item.id }}">{{ item.cod_complementar }} - {{ item.item_codigo }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            </div>
+{% include 'ferramentaria/modais/home/modal_nova_solicitacao.html' %}
+{% include 'ferramentaria/modais/home/modal_visualizar_solicitacao.html' %}
+{% endblock %}
 
-            <div class="form-group">
-                <label>Máquina</label>
-                <select name="maquina_id" required>
-                    <option value="">Selecione a Máquina...</option>
-                    {% for maq in lista_maquinas %}
-                        <option value="{{ maq.id_maquina }}">{{ maq.maquina }}</option>
-                    {% endfor %}
-                </select>
-            </div>
 
-            <div class="form-group" style="margin-bottom: 15px;">
-                <label style="color: #004B78; font-weight: bold; font-size: 0.95rem; display: block; margin-bottom: 5px;">
-                    Quantidade Produzidas:
-                </label>
-                <input type="number" name="pecas_produzidas" min="0" placeholder="Ex: 15000" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box; font-size: 1rem;">
-            </div>
 
-            <div class="form-group">
-                <label>Operador / Solicitante</label>
-                <select name="operador_id" required>
-                    <option value="">Selecione o Colaborador...</option>
-                    {% for colab in lista_operadores %}
-                        <option value="{{ colab.id }}">{{ colab.nome }} - {{ colab.funcao }}</option>
-                    {% endfor %}
-                </select>
-            </div>
 
-           <!-- <div class="form-group">
-                <label>Ordem de Produção (OP)</label>
-                <input type="text" name="ordem_producao" placeholder="Ex: OP-54321" required>
-            </div>
 
-            <div class="form-group">
-                <label>Data da OP</label>
-                <input type="date" name="data_op" required>
-            </div>
-        -->
-            <div class="form-group">
-                <label >Ordem de Manutenção</label>
-                <input type="text" id="ordem_manutencao" name="ordem_manutencao" 
-                    placeholder="Ex: OM-2026-001" 
-                    style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-            </div>
-
-            <div class="form-group">
-                <label>Problemas Identificados</label>
-                <div style="max-height: 100px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 4px; background-color: #f9f9f9;">
-                    {% for prob in lista_problemas %}
-                        <label class="checkbox-container-label">
-                            <input type="checkbox" name="problemas_ids" value="{{ prob.id }}"> {{ prob.problema }}
-                        </label>
-                    {% empty %}
-                        <span style="color: #666; font-size: 0.9em;">Nenhum problema cadastrado.</span>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Parecer do Operador</label>
-                <textarea name="parecer_producao" rows="2" placeholder="Detalhes extras sobre a falha..."></textarea>
-            </div>
-            
-            <button type="submit" class="btn-submit">Salvar Solicitação</button>
-        </form>
-    </div>
-</div>
-
-<div id="modalDetalhesOS" class="modal-overlay">
-    <div class="modal-content" style="width: 500px;">
-        <span class="modal-close" onclick="fecharModal('modalDetalhesOS')">&times;</span>
-        <h2>Tratar Pendência</h2>
-        <hr style="margin-bottom: 15px;">
-        
-        <div style="background-color: #f4f6f9; border-left: 4px solid #004B78; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 0.9rem; color: #333;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <span><strong>OS Nº:</strong> <span id="detalhe-id"></span></span>
-                <span><strong>Abertura:</strong> <span id="detalhe-data"></span></span>
-            </div>
-            <div style="margin-bottom: 4px;"><strong>Molde:</strong> <span id="detalhe-molde"></span></div>
-            <div style="margin-bottom: 4px;"><strong>IN:</strong> <span id="detalhe-in"></span></div>
-            <div style="margin-bottom: 4px;"><strong>Máquina:</strong> <span id="detalhe-maquina"></span></div>
-            <div style="display: flex; justify-content: space-between; background-color: #e9f2f9; padding: 10px 15px; border-radius: 4px; border: 1px solid #c2dced; margin: 10px 0;">
-                <div style="font-size: 0.9rem;">
-                    <strong style="color: #004B78;">Quantidade Produzida:</strong> 
-                    <span id="detalhe-ultima-contagem" style="color: #d9534f; font-weight: bold; font-size: 1rem;">--</span>
-                </div>
-                <div style="font-size: 0.9rem;">
-                    <strong style="color: #004B78;">Ciclos Totais:</strong> 
-                    <span id="detalhe-ciclos-atuais" style="font-weight: bold; font-size: 1rem;">--</span>
-                </div>
-            </div>
-            <div style="margin-bottom: 4px;"><strong>Operador:</strong> <span id="detalhe-operador"></span></div>
-            <div style="margin-bottom: 4px;"><strong>OM:</strong> <span id="detalhe-om"></span></div> 
-            <div style="margin-bottom: 4px; color: #c9302c;"><strong>Problemas:</strong> <span id="detalhe-problemas" style="font-weight: bold;"></span></div>
-            <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed #ccc; font-style: italic;">
-                <strong>Parecer Prod:</strong> <span id="detalhe-parecer-prod"></span>
-            </div>
-        </div>
-        
-        <form method="POST" action="">
-            {% csrf_token %}
-            <input type="hidden" name="tipo_acao" value="registrar_manutencao">
-            <input type="hidden" name="os_id" id="input-os-id">
-            
-            <div class="form-group">
-                <label>Responsável Técnico</label>
-                <select name="responsavel_id" {% if not pode_editar %}disabled{% endif %} required>
-                    <option value="">Selecione o Ferramenteiro...</option>
-                    {% for ferram in lista_ferramenteiros %}
-                        <option value="{{ ferram.id }}">{{ ferram.nome }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>AÇÕES REALIZADAS</label>
-                <div style="max-height: 110px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 4px; background-color: #fafafa;">
-                    {% for acao in lista_acoes_manutencao %}
-                        <label style="display:block; font-size: 0.9rem;">
-                            <input type="checkbox" name="acoes_realizadas_ids" value="{{ acao.id }}" {% if not pode_editar %}disabled{% endif %}> {{ acao.acao }}
-                        </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Parecer Técnico / Observações</label>
-                <textarea name="parecer_ferramentaria" rows="2" {% if not pode_editar %}disabled{% endif %} placeholder="Detalhes técnicos..."></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label>Status do Atendimento</label>
-                <select name="novo_status" id="detalhe-status" {% if not pode_editar %}disabled{% endif %} required onchange="toggleManutencao()">
-                    <option value="Em Manutenção">Em Manutenção</option>
-                    <option value="Concluído">Concluído</option>
-                </select>
-            </div>
-
-            <div id="bloco-em-manutencao" style="display: none; background: #fff3cd; padding: 12px; border-radius: 4px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <label style="color: #856404;">Previsão</label>
-                    <input type="date" name="previsao_retorno" id="previsao_retorno" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" {% if not pode_editar %}disabled{% endif %}>
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label style="color: #856404;">Aguardando por:</label>
-                    <input type="text" name="motivo_manutencao" id="motivo_manutencao" placeholder="Ex: Aguardando compra de peça..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" {% if not pode_editar %}disabled{% endif %}>
-                </div>
-            </div>
-            
-            {% if pode_editar %}
-                <button type="submit" class="btn-submit" style="background-color: #004B78; width: 100%; margin-top: 10px;">
-                    Registrar Manutenção
-                </button>
-            {% else %}
-                <p style="color: #777; text-align: center; margin-top: 10px;"><em>* Apenas ferramentaria pode alterar este status.</em></p>
-            {% endif %}
-        </form>
-    </div>
-</div>
-
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    function abrirModal(idModal) { document.getElementById(idModal).style.display = 'flex'; }
-    function fecharModal(idModal) { document.getElementById(idModal).style.display = 'none'; }
-
-    function abrirModalDetalhes(elementoClicado) {
-      // Captura os dados da linha clicada
+    function abrirNovaSolicitacao() {
+        // 1. Limpa o formulário (reseta todos os campos)
+        const form = document.querySelector('#modalNovaOS form');
+        if (form) form.reset();
+        
+        // 2. Garante que o select do item (IN) volte para a opção vazia
+        const inSelect = document.querySelector('select[name="inValor"]');
+        if (inSelect) {
+            inSelect.innerHTML = '<option value="">Selecione primeiro o Molde</option>';
+        }
+        
+        // 3. Abre o modal
+        abrirModal('modalNovaOS');
+    }
+    // 2. Função de toggle Manutenção (Recuperada para evitar o erro de referência)
+    function toggleManutencao() {
+        var statusSelect = document.getElementById('detalhe-status');
+        var bloco = document.getElementById('bloco-em-manutencao');
+        if (statusSelect && bloco) {
+            bloco.style.display = (statusSelect.value === 'Em Manutenção') ? 'block' : 'none';
+        }
+    }
+</script>
+<script>
+    // 1. FUNÇÃO GLOBAL (Fora do document.ready para o onclick funcionar)
+    function abrirModalVisualizar(elementoClicado) {
         var id = elementoClicado.getAttribute('data-id');
         var molde = elementoClicado.getAttribute('data-molde');
         var data = elementoClicado.getAttribute('data-data');
@@ -668,8 +235,6 @@
         var operador = elementoClicado.getAttribute('data-operador');
         var dataom = elementoClicado.getAttribute('data-OM');
         var inValue = elementoClicado.getAttribute('data-IN');
-        //var op = elementoClicado.getAttribute('data-op');
-        //var dataop = elementoClicado.getAttribute('data-dataop');
         var problemas = elementoClicado.getAttribute('data-problemas');
         var parecerProd = elementoClicado.getAttribute('data-parecer-prod');
         var motivo = elementoClicado.getAttribute('data-motivo');
@@ -677,7 +242,6 @@
         var ultimaContagem = elementoClicado.getAttribute('data-ultima-contagem');
         var ciclosAtuais = elementoClicado.getAttribute('data-ciclos-atuais');
 
-        // Injeta os dados nos spans informativos do modal
         document.getElementById('detalhe-id').innerText = id;
         document.getElementById('detalhe-molde').innerText = molde;
         document.getElementById('detalhe-data').innerText = data;
@@ -685,29 +249,24 @@
         document.getElementById('detalhe-operador').innerText = operador;
         document.getElementById('detalhe-in').innerText = inValue;
         document.getElementById('detalhe-om').innerText = dataom;
-        //document.getElementById('detalhe-op').innerText = op;
-        //document.getElementById('detalhe-dataop').innerText = dataop;
         document.getElementById('detalhe-problemas').innerText = problemas;
         document.getElementById('detalhe-parecer-prod').innerText = parecerProd;
         document.getElementById('detalhe-ultima-contagem').innerText = ultimaContagem;
         document.getElementById('detalhe-ciclos-atuais').innerText = ciclosAtuais;
-       
 
-        // Seta o ID da OS no input hidden para enviar via POST correto
         document.getElementById('input-os-id').value = id;
+        
         var statusAtual = elementoClicado.getAttribute('data-status') || "Aberto";
         var selectStatusDash = document.getElementById('detalhe-status');
-        var opcaoExisteDash = false;
         
-        // 1. Verifica se a opção já existe
+        // Lógica de seleção de status
+        var opcaoExisteDash = false;
         for (var i = 0; i < selectStatusDash.options.length; i++) {
             if (selectStatusDash.options[i].value === statusAtual) {
                 opcaoExisteDash = true;
                 break;
             }
         }
-        
-        // 2. Cria a opção invisível se não existir
         if (!opcaoExisteDash) {
             var novaOpcaoDash = document.createElement('option');
             novaOpcaoDash.value = statusAtual;
@@ -715,147 +274,111 @@
             novaOpcaoDash.style.display = 'none';
             selectStatusDash.add(novaOpcaoDash);
         }
-        
-        // 3. Aplica o valor com sucesso
         selectStatusDash.value = statusAtual;
 
         var inputMotivo = document.getElementById('motivo_manutencao');
         var inputPrevisao = document.getElementById('previsao_retorno');
-        if (inputMotivo) inputMotivo.value = motivo;
-        if (inputPrevisao) inputPrevisao.value = previsao;
+        if (inputMotivo) inputMotivo.value = motivo || '';
+        if (inputPrevisao) inputPrevisao.value = previsao || '';
 
-        var modal = document.getElementById('modalDetalhesOS');
+        var modal = document.getElementById('modalVisualizarOS');
         if (modal) {
-            modal.style.display = 'flex'; // Usamos flex pois o seu CSS deve usar flex no modal
+            modal.style.display = 'flex';
             toggleManutencao();
         }
     }
 
-    // 1. Fecha o modal se o usuário clicar na área escura (fora do quadro branco)
-    window.onclick = function(event) {
-        if (event.target.classList.contains('modal-overlay')) {
-            event.target.style.display = 'none';
-        }
-    }
-
-    // 2. 🟢 NOVO: Fecha os modais automaticamente ao pressionar a tecla ESC
-    window.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            fecharModal('modalNovaOS');
-            fecharModal('modalDetalhesOS');
+    // 2. INICIALIZAÇÃO
+    $(document).ready(function() {
+        // Select2
+        var $meuSelect = $('.filtro-pesquisa');
+        if ($meuSelect.length) {
+            $meuSelect.select2({
+                placeholder: "🔍 Digite para buscar o molde...",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('body')
+            });
+            $meuSelect.on('select2:select select2:unselect', function () {
+                $(this).closest('form').submit();
+            });
         }
     });
-</script>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-{% if molde_selecionado %}
-<script>
-    const ctx = document.getElementById('graficoProblemas').getContext('2d');
-    const labelsProblemas = JSON.parse('{{ labels_problemas|safe }}');
-    const valoresProblemas = JSON.parse('{{ valores_problemas|safe }}');
+        /*var $modalSelects = $('select[name="molde_id"], select[name="inValor"], select[name="maquina_id"], select[name="operador_id"]');
     
-    // 1. Instancia o gráfico normalmente com as configurações limpas
-    new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: labelsProblemas,
-            datasets: [{
-                data: valoresProblemas,
-                backgroundColor: ['#004B78', '#d9534f', '#f0ad4e', '#5cb85c', '#5bc0de', '#8a6d3b'],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom' }
-            }
-        }
-    });
+        if ($modalSelects.length) {
+            $modalSelects.select2({
+                placeholder: "Selecione uma opção...",
+                width: '100%',
+                dropdownParent: $('#modalNovaOS'),
+                sorter: function(data) {
+                    // Força a ordenação alfabética para todos os campos
+                    return data.sort(function(a, b) {
+                        return a.text.localeCompare(b.text);
+                    });
+                }
+            });
+        }*/
+       $('.select2-modal').each(function() {
+            var $el = $(this);
+            $el.select2({
+                placeholder: "Selecione uma opção...",
+                width: '100%',
+                // O "closest" encontra o modal pai correto automaticamente
+                dropdownParent: $el.closest('.modal-overlay'), 
+                sorter: function(data) {
+                    return data.sort(function(a, b) {
+                        return a.text.localeCompare(b.text);
+                    });
+                }
+            });
 
-    // 2. Executa o cálculo do total FORA do gráfico, usando a variável que você já tem
-    try {
-        if (typeof valoresProblemas !== 'undefined' && valoresProblemas.length > 0) {
-            // Soma todos os números da lista utilizando a função reduce
-            var somaTotal = valoresProblemas.reduce(function(acumulador, valorAtual) {
-                return acumulador + Number(valorAtual);
-            }, 0);
+    $(document).on('change', 'select[name="molde_id"]', function() {
+            var moldeId = $(this).val();
+            var $inSelect = $('select[name="inValor"]');
             
-            // Injeta o valor somado diretamente na nossa badge do HTML
-            document.getElementById('badge-total-problemas').innerText = "Total: " + somaTotal;
-        } else {
-            document.getElementById('badge-total-problemas').innerText = "Total: 0";
-        }
-    } catch (erro) {
-        console.log("Aviso ao carregar totalizador: ", erro);
-    }
-</script>
-
-
-{% endif %}
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Captura os dois campos na tela pelos seus nomes (name="")
-    const moldeSelect = document.querySelector('select[name="molde_id"]'); // Ajuste aqui se o name do seu select de molde for diferente!
-    const inSelect = document.querySelector('select[name="inValor"]');
-
-    if (moldeSelect && inSelect) {
-        // Fica "escutando" qualquer mudança no campo Molde
-        moldeSelect.addEventListener("change", function() {
-            const moldeId = this.value;
-            
-            // Coloca um aviso de "Carregando" enquanto busca no banco
-            inSelect.innerHTML = '<option value="">Carregando...</option>';
+            $inSelect.html('<option value="">Carregando...</option>');
 
             if (moldeId) {
-                // Vai até o servidor buscar os itens daquele molde
-                fetch(`/ajax/carregar-itens/?molde_id=${moldeId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Limpa o select e adiciona a primeira opção
-                        inSelect.innerHTML = '<option value="">Selecione o IN (Opcional)...</option>';
-                        
-                        // Cria uma nova opção <option> para cada item que o servidor devolveu
-                        data.forEach(item => {
-                            inSelect.innerHTML += `<option value="${item.id}">${item.texto}</option>`;
+                $.ajax({
+                    url: '/ajax/carregar-itens/',
+                    data: { 'molde_id': moldeId },
+                    dataType: 'json',
+                    success: function(data) {
+                        $inSelect.html('<option value="">Selecione o IN (Opcional)...</option>');
+                        data.forEach(function(item) {
+                            $inSelect.append('<option value="' + item.id + '">' + item.texto + '</option>');
                         });
-                    })
-                    .catch(error => console.error('Erro ao buscar itens:', error));
+                    },
+                    error: function() {
+                        $inSelect.html('<option value="">Erro ao carregar itens</option>');
+                    }
+                });
             } else {
-                inSelect.innerHTML = '<option value="">Selecione primeiro o Molde</option>';
+                $inSelect.html('<option value="">Selecione primeiro o Molde</option>');
             }
         });
-    }
-});
-</script>
-
-<script>
-    function toggleManutencao() {
-        var status = document.getElementById('detalhe-status').value;
-        var bloco = document.getElementById('bloco-em-manutencao');
-        
-        if (status === 'Em Manutenção') {
-            bloco.style.display = 'block';
-        } else {
-            bloco.style.display = 'none';
-        }
-    }
-</script>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<script>
-    $(document).ready(function() {
-        $('#select-molde').select2({
-            placeholder: "Digite para buscar o molde...",
-            allowClear: true,
-            width: '100%', // Garante que o select respeite o flex: 1 do seu container
-            dropdownParent: $('#wrapper-select')
-        });
+        // Gráficos
+        {% if molde_selecionado %}
+            const ctx = document.getElementById('graficoProblemas').getContext('2d');
+            const labelsProblemas = JSON.parse('{{ labels_problemas|safe }}');
+            const valoresProblemas = JSON.parse('{{ valores_problemas|safe }}');
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labelsProblemas,
+                    datasets: [{
+                        data: valoresProblemas,
+                        backgroundColor: ['#004B78', '#d9534f', '#f0ad4e', '#5cb85c', '#5bc0de', '#8a6d3b'],
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+        {% endif %}
     });
 </script>
 {% endblock %}
+

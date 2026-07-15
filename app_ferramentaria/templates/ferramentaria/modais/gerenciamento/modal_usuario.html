@@ -1,0 +1,28 @@
+<div id="modal-usuario" class="modal-overlay" onclick="fecharModalOuter(event)">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharModal('modal-usuario')">&times;</span>
+            <h3 id="titulo-modal-usuario">Novo Acesso e Colaborador</h3>
+            <form action="{% url 'ferramentaria:salvar_usuario' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="tipo_acao" value="criar_usuario">
+                
+                <label>Nome Completo (Crachá):</label>
+                <input type="text" name="nome_completo" required placeholder="Ex: João da Silva">
+                
+                <label>Nome de Usuário (Login):</label>
+                <input type="text" name="username" required placeholder="Ex: joao.silva">
+                
+                <label>Senha Inicial:</label>
+                <input type="password" name="password" required>
+                
+                <label>Cargo / Nível de Acesso:</label>
+                <select name="grupo" required>
+                    <option value="Operador">Operador </option>
+                    <option value="Ferramenteiro">Ferramenteiro </option>
+                    <option value="Admin">Administrador </option>
+                </select><br><br>
+                
+                <button type="submit" class="btn-general btn-submit">Salvar Acesso</button>
+            </form>
+        </div>
+    </div>

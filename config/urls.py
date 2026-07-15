@@ -3,7 +3,7 @@ from django.urls import path, include
 
 
 # 1. Muda o texto que aparece na aba do navegador
-admin.site.site_title = 'Painel de Controle - CMRF '
+admin.site.site_title = 'Painel de Controle - FRAMES'
 
 # 2. Muda o subtítulo na tela inicial do admin (o antigo "Administração do Site")
 admin.site.index_title = 'Controle de usuarios'

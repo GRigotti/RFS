@@ -1,0 +1,127 @@
+<div class="modal-overlay" id="modalDetalhesOS" style="display: none;">
+    <div class="modal-content" style="width: 580px;">
+        <span class="modal-close" onclick="fecharModal('modalDetalhesOS')">&times;</span>
+        
+        <form method="POST" action="" style="margin: 0; padding: 0; width: 100%;">
+            {% csrf_token %}
+            <input type="hidden" name="tipo_acao" value="registrar_manutencao">
+            <input type="hidden" name="os_id" id="h-id-input">
+
+            <h2 style="color: #004B78; border-bottom: 2px solid #004B78; padding-bottom: 5px; margin-bottom: 15px; font-weight: bold; font-size: 1.4rem;">
+                Ficha de Manutenção nº <span id="h-id">--</span>
+            </h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem; background: #f8f9fa; padding: 12px; border-radius: 6px; margin-bottom: 15px; border-left: 4px solid #004B78;">
+                <div><strong>Molde:</strong> <span id="h-molde">--</span></div>
+                <div><strong>IN:</strong> <span id="h-in">--</span></div> <div><strong>Máquina Linha:</strong> <span id="h-maquina">--</span></div>
+                <div><strong>Ordem de Manutenção:</strong> <span id="h-op">--</span> </div>
+                <div style="grid-column: span 2;"><strong>Operador:</strong> <span id="h-operador">--</span></div>
+                <div style="background: #e9f2f9; padding: 8px 12px; border-radius: 4px; border: 1px solid #c2dced;">
+                    <strong style="color: #004B78; font-size: 0.82rem; display: block; margin-bottom: 4px;">QUANTIDADE PRODUZIDA</strong>
+                    <span id="h-ultima-contagem" style="color: #004B78; font-weight: bold; font-size: 1.3rem; display: block; line-height: 1.1;">--</span>
+                </div>
+                <div style="background: #e9f2f9; padding: 8px 12px; border-radius: 4px; border: 1px solid #c2dced;">
+                    <strong style="color: #004B78; font-size: 0.82rem; display: block; margin-bottom: 4px;">CICLOS TOTAIS</strong>
+                    <span id="h-ciclos-atuais" style="color: #004B78; font-weight: bold; font-size: 1.3rem; display: block; line-height: 1.1;">--</span>
+                </div>
+                
+                <div style="grid-column: span 2; display: flex; align-items: center; gap: 5px; margin-top: 5px; border-top: 1px dashed #ccc; padding-top: 10px;">
+                <div id="h-status-view" style="width: 100%;"><strong>Status Atual:</strong> <span id="h-status" style="font-weight: bold; color: #004B78;">--</span></div>
+
+                <div id="h-status-edit" style="display: none; width: 100%; align-items: center; gap: 10px;">
+                    <label style="font-weight: bold; margin: 0; color: #004B78; white-space: nowrap;">Alterar Status:</label>
+                    <select name="novo_status" id="h-status-select" class="select2-modal" {% if not pode_editar %}disabled{% endif %} style="padding: 4px 8px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold;" onchange="toggleManutencaoHistorico()" required>
+                        <option value="Em Manutenção">Em Manutenção</option>
+                        <option value="Concluído">Concluído</option>
+                    </select>
+                </div>
+            </div>
+
+           <div id="h-bloco-manutencao" style="display: none; grid-column: span 2; margin-top: 5px;">
+        
+                <div id="h-manutencao-view" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="background: #fff8e1; padding: 8px 12px; border-radius: 4px; border: 1px solid #ffe082;">
+                        <strong style="color: #b78103; font-size: 0.82rem; display: block; margin-bottom: 4px;">PREVISÃO DE RETORNO</strong>
+                        <span id="h-previsao-texto" style="font-weight: bold; font-size: 1.1rem; color: #b78103; display: block;">--</span>
+                    </div>
+                    <div style="background: #fff8e1; padding: 8px 12px; border-radius: 4px; border: 1px solid #ffe082;">
+                        <strong style="color: #b78103; font-size: 0.82rem; display: block; margin-bottom: 4px;">AGUARDANDO POR</strong>
+                        <span id="h-motivo-texto" style="font-weight: bold; font-size: 1.1rem; color: #b78103; display: block;">--</span>
+                    </div>
+                </div>
+
+                <div id="h-manutencao-edit" style="display: none;">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label style="color: #b78103; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem;">Previsão</label>
+                        <input type="date" name="previsao_retorno" id="h-previsao-input" style="width: 100%; padding: 8px; border: 1px solid #ffe082; border-radius: 4px; box-sizing: border-box;" {% if not pode_editar %}disabled{% endif %}>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: #b78103; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem;">Aguardando por:</label>
+                        <input type="text" name="motivo_manutencao" id="h-motivo-input" style="width: 100%; padding: 8px; border: 1px solid #ffe082; border-radius: 4px; box-sizing: border-box;" {% if not pode_editar %}disabled{% endif %}>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+
+
+            <div style="font-size: 0.82rem; color: #666; margin-bottom: 15px; padding-left: 5px;">
+                📅 <strong>Abertura:</strong> <span id="h-abertura">--</span> | 🏁 <strong>Fechamento:</strong> <span id="h-fechamento">--</span>
+            </div>
+
+            <div class="form-group">
+                <label>Sintomas / Defeitos Detectados</label>
+                <div id="h-problemas" style="padding: 8px; background: #fdf2f2; border: 1px solid #f5c6cb; border-radius: 4px; color: #721c24; font-weight: bold; font-size: 0.9rem;">--</div>
+            </div>
+
+            <div class="form-group">
+                <label>Ferramenteiro Responsável</label>
+                <div id="h-ferramenteiro-view" style="padding: 8px; background: #fdfdfd; border: 1px solid #ddd; border-radius: 4px; font-weight: 500;">--</div>
+                <div id="h-ferramenteiro-edit" style="display: none;">
+                    <select name="responsavel_id" id="h-ferramenteiro-select" class="select2-modal" {% if not pode_editar %}disabled{% endif %} style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 0.9rem;">
+                        <option value="">-- Selecione o Ferramenteiro Responsável --</option>
+                        {% for f in lista_ferramenteiros %}
+                            <option value="{{ f.id }}">{{ f.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Ações Técnicas Realizadas (Bancada)</label>
+                <div id="h-acoes-view" style="padding: 8px; background: #f3f9f4; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724; font-weight: bold; font-size: 0.9rem;">--</div>
+                
+                <div id="h-acoes-edit" class="grid-check-container" style="display: none;">
+                    {% for acao in lista_acoes_manutencao %}
+                        <label class="checkbox-container-label {% if not pode_editar %}acao-opaca{% endif %}">
+                            <input type="checkbox" name="acoes_realizadas_ids" value="{{ acao.id }}" {% if not pode_editar %}disabled{% endif %}>
+                            {{ acao.acao }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Parecer do Chão de Fábrica (Produção)</label>
+                <textarea id="h-parecer-prod" rows="2" readonly style="background-color: #f1f1f1; font-style: italic; color: #555; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Laudo Técnico da Bancada (Ferramentaria)</label>
+                <textarea id="h-parecer-ferr" name="parecer_ferramentaria" rows="2" {% if not pode_editar %}disabled{% endif %} style="font-family: inherit; font-size: 0.9rem; font-weight: 500; width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;"></textarea>
+            </div>
+
+            <div id="h-botao-salvar-container" style="display: none; justify-content: flex-end; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; width: 100%;">
+                {% if pode_editar %}
+                    <button type="submit" style="background-color: #004B78; color: white; border: none; padding: 10px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transition: background 0.2s;">
+                        Salvar Alterações
+                    </button>
+                {% else %}
+                    <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; text-align: center; font-weight: bold; border: 1px solid #f5c6cb; width: 100%; box-sizing: border-box;">
+                        🔒 Modo de Visualização: Apenas a Ferramentaria pode alterar esta ficha.
+                    </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>

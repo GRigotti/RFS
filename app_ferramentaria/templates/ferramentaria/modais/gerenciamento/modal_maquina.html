@@ -1,0 +1,16 @@
+ <div id="modal-maquina" class="modal-overlay" onclick="fecharModalOuter(event)">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharModal('modal-maquina')">&times;</span>
+            <h3 id="titulo-modal-maquina">Nova Máquina</h3>
+            <form action="{% url 'ferramentaria:salvar_maquina' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="id" id="maq-id">
+                <label>Nome da Máquina (Tag):</label><input type="text" name="maquina" id="maq-nome" required class="uppercase-input" oninput="this.value = this.value.toUpperCase()">
+                <label>Grupo da Máquina:</label><input type="text" name="grupo_maquina" id="maq-grupo" class="uppercase-input" placeholder="Ex: INJETORA">
+                <label>Descrição:</label><input type="text" name="descricao" id="maq-descricao">
+                <label>Status:</label>
+                <select name="status" id="maq-status"><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select><br><br>
+                <button type="submit" class="btn-general btn-submit">Salvar</button>
+            </form>
+        </div>
+    </div>

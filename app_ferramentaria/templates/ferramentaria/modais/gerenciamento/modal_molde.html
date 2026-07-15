@@ -1,0 +1,15 @@
+<div id="modal-molde" class="modal-overlay" onclick="fecharModalOuter(event)">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharModal('modal-molde')">&times;</span>
+            <h3 id="titulo-modal-molde">Novo Molde</h3>
+            <form action="{% url 'ferramentaria:salvar_molde' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="id" id="molde-id">
+                <label>Nome do Molde:</label><input type="text" name="molde_nome" id="molde-nome" required class="uppercase-input">
+                <label>Endereço:</label><input type="text" name="endereco_molde" id="molde-endereco" class="uppercase-input">
+                <label>Status:</label>
+                <select name="status" id="molde-status"><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select><br><br>
+                <button type="submit" class="btn-general btn-submit">Salvar</button>
+            </form>
+        </div>
+    </div>

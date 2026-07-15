@@ -1,0 +1,24 @@
+ <div id="modal-item-molde" class="modal-overlay" onclick="fecharModalOuter(event)">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharModal('modal-item-molde')">&times;</span>
+            <h3 id="titulo-modal-item-molde">Novo Item por Molde</h3>
+            <form action="{% url 'ferramentaria:salvar_item_molde' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="id" id="item-id">
+                <label>Molde Vinculado:</label>
+                <select name="id_referencia_molde" id="item-ref-molde">
+                    <option value="">-- Nenhum / Deixar Vazio --</option>
+                    {% for molde in moldes %}
+                        <option value="{{ molde.id }}">{{ molde.molde_nome }}</option>
+                    {% endfor %}
+                </select>
+                <label>Código do Item:</label><input type="text" name="item_codigo" id="item-codigo" required class="uppercase-input">
+                <label>Descrição:</label><input type="text" name="descricao" id="item-descricao" required>
+                <label>Código Complementar:</label><input type="text" name="cod_complementar" id="item-cod-complem" class="uppercase-input">
+                <label>Linha:</label><input type="text" name="linha" id="item-linha">
+                <label>Status:</label>
+                <select name="status" id="item-status"><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select><br><br>
+                <button type="submit" class="btn-general btn-submit">Salvar</button>
+            </form>
+        </div>
+    </div>

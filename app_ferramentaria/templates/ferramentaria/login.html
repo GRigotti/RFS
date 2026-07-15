@@ -1,88 +1,12 @@
 {% extends 'ferramentaria/base.html' %}
+{% load static %}
+{% block extra_css %}
+        <link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
 
+{% block title %}Login - FRAMES{% endblock %}
 {% block content %}
-<style>
-    /* Estilos específicos para centralizar e embelezar a caixa de login */
-    .login-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 70vh; /* Centraliza verticalmente na tela */
-    }
 
-    .login-box {
-        background: white;
-        padding: 40px;
-        border-radius: 8px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        width: 100%;
-        max-width: 400px;
-        text-align: center;
-    }
-
-    .login-box h2 {
-        color: #004B78;
-        margin-bottom: 25px;
-        font-weight: bold;
-    }
-
-    .login-group {
-        margin-bottom: 20px;
-        text-align: left;
-    }
-
-    .login-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: bold;
-        color: #3b2826;
-        font-size: 0.95rem;
-    }
-
-    .login-group input {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box;
-        font-size: 1rem;
-    }
-    
-    .login-group input:focus {
-        border-color: #004B78;
-        outline: none;
-        box-shadow: 0 0 5px rgba(0, 75, 120, 0.3);
-    }
-
-    .btn-login {
-        background-color: #004B78;
-        color: white;
-        border: none;
-        padding: 15px;
-        width: 100%;
-        border-radius: 4px;
-        font-size: 1.1rem;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        margin-top: 10px;
-    }
-
-    .btn-login:hover {
-        background-color: #11273d;
-    }
-
-    /* Mensagem de erro do Django (se errar a senha) */
-    .login-error {
-        background-color: #f8d7da;
-        color: #721c24;
-        padding: 10px;
-        border-radius: 4px;
-        margin-bottom: 20px;
-        font-size: 0.9rem;
-        border: 1px solid #f5c6cb;
-    }
-</style>
 
 <div class="login-container">
     <div class="login-box">

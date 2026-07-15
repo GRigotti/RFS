@@ -1,0 +1,13 @@
+<div id="modal-problema" class="modal-overlay" onclick="fecharModalOuter(event)">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharModal('modal-problema')">&times;</span>
+            <h3 id="titulo-modal-problema">Novo Problema</h3>
+            <form action="{% url 'ferramentaria:salvar_problema' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="id" id="prob-id">
+                <label>Problema:</label><input type="text" name="problema" id="prob-titulo" required>
+                <label>Descrição Detalhada:</label><textarea name="descricao" id="prob-descricao" rows="4"></textarea><br><br>
+                <button type="submit" class="btn-general btn-submit">Salvar</button>
+            </form>
+        </div>
+    </div>

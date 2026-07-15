@@ -1,0 +1,287 @@
+<div class="layout-b-container">
+    
+    <aside class="sidebar-molde">
+        
+        <div class="sidebar-select-wrapper">
+            <form method="GET" action="" style="margin: 0;">
+                <label class="sidebar-select-label">📚 Consultar:</label>
+                <select name="molde" class="sidebar-select" onchange="this.form.submit()">
+                    <option value="">-- Todos os Moldes --</option> 
+                    {% for m in lista_moldes %}
+                        <option value="{{ m.id }}" {% if request.GET.molde == m.id|stringformat:"s" %}selected{% endif %}>
+                            {{ m.molde_nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <button class="menu-tab-btn active" onclick="switchSubTab(event, 'visao-geral')">
+                📊 Visão Geral
+            </button>
+            <button class="menu-tab-btn" onclick="switchSubTab(event, 'produtividade')">
+                📈 Produtividade
+            </button>
+            <button class="menu-tab-btn" onclick="switchSubTab(event, 'manutencao')">
+                🔧 Manutenção
+            </button>
+            <button class="menu-tab-btn" onclick="switchSubTab(event, 'cadastro')">
+                📋 Cadastro
+            </button>
+        </nav>
+
+        <div class="qr-section">
+            <p style="font-size: 0.85rem; color: #e0e0e0; margin-top: 0; margin-bottom: 10px; font-weight: 500;">Etiqueta de Identificação</p>
+            <div class="qr-box">
+                <img id="qr-code-img" src="" alt="QR Code" style="width: 130px; height: 130px; display: block;">
+            </div>
+            <button class="btn-print" onclick="imprimirEtiquetaQr()">🖨️ Imprimir Etiqueta</button>
+        </div>
+    </aside>
+
+    <main class="content-molde">
+        
+        <div style="text-align: center; margin-bottom: 30px; border-bottom: 1px solid #f0f2f5; padding-bottom: 25px;">
+            <h1 style="margin: 0; color: #004B78; font-size: 1.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+                {{ molde_selecionado.molde_nome }}
+            </h1>
+            <p style="margin: 5px 0 0 0; color: #6c757d; font-size: 0.95rem; font-weight: 500; letter-spacing: 0.2px;">
+                Painel de Controle e Histórico Ativo
+            </p>
+        </div>
+        
+        <!-- ABA 1: VISÃO GERAL -->
+        <div id="tab-visao-geral" class="molde-tab-content active">
+            <div class="visao-geral-grid">
+                <!-- Foto Aumentada -->
+                <div class="photo-box">🖼️ Foto do Molde</div>
+                
+                <!-- Ciclos e Endereço Separados e Diminuídos -->
+                <div class="info-box">
+                    <div class="info-item info-box-item">
+                        <strong>🔄 Ciclos:</strong><br>
+                        <span style="font-size: 1.2rem; color:#004B78; font-weight: bold;">{{ molde_selecionado.ciclos|default:"0" }}</span>
+                    </div>
+                    <div class="info-item info-box-item">
+                        <strong>📍 Endereço:</strong><br>
+                        <span style="color: #495057; font-size: 0.9rem;">{{ molde_selecionado.endereco_molde|default:"Não informado" }}</span>
+                    </div>
+                </div>
+
+                <!-- Última Solicitação Aumentada -->
+                <div class="os-card">
+                    <h4 class="dash-card-title" style="margin-bottom:10px;">Última Solicitação</h4>
+                    {% with ultima=solicitacoes.0 %}
+                        {% if ultima %}
+                            <p><strong>Data:</strong> {{ ultima.data_abertura|date:"d/m/y" }} | <strong>IN:</strong> {{ ultima.item.cod_complementar|default:'N/A' }}</p>
+                            <p><strong>Prob:</strong> {% for p in ultima.problemas.all %}{{ p.problema }}{% endfor %}</p>
+                            <p><strong>Op:</strong> {{ ultima.operador.nome }}</p>
+                            <hr style="margin: 8px 0;">
+                            {% if ultima.status == 'Concluído' %}
+                                <p><strong>Ações:</strong> {% for sa in ultima.solicitacaoacao_set.all %}{{ sa.acao.acao }}{% endfor %}</p>
+                                <p><strong>Resp:</strong> {{ ultima.responsavel.nome }}</p>
+                            {% else %}
+                                <p><strong>Status:</strong> {{ ultima.status }}</p>
+                                {% if ultima.previsao_retorno %}<p><strong>Prev:</strong> {{ ultima.previsao_retorno|date:"d/m/y" }}</p>{% endif %}
+                            {% endif %}
+                        {% else %} Sem solicitações. {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+            
+            <!-- Itens Vinculados -->
+            <div class="dash-card" style="margin-top: 20px;">
+                <h4 class="dash-card-title">📦 Itens Vinculados a esta Ferramenta</h4>
+                <div class="items-flex">
+                    {% for item in itens_molde %}
+                        <div class="item-vinculado-card">
+                            <strong>{{ item.item_codigo }}</strong>
+                            <span class="item-in-text">IN: {{ item.cod_complementar|default:"N/A" }}</span>
+                        </div>
+                    {% empty %}
+                        <p style="color: #64748b; font-style: italic; font-size: 0.9rem; margin: 0;">
+                            Nenhum item associado a este molde.
+                        </p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-produtividade" class="molde-tab-content">
+            <h2 class="tab-title">📈 Produtividade</h2>
+            <p style="color: #6c757d; font-style: italic;">Pronto para receber gráficos de eficiência futuros.</p>
+        </div>
+
+        <div id="tab-manutencao" class="molde-tab-content">
+            <h2 class="tab-title">🔧 Histórico de Manutenção</h2>
+
+            <div class="historico-box" style="margin-top: 0; margin-bottom: 30px; width: 100%;">
+                <h3 style="color: #004B78; font-size: 1.1rem; margin-bottom: 15px; font-weight: 600;">Linha do Tempo de Intervenções (Ordens de Serviço)</h3>
+                
+                <div class="table-header">
+                    <span class="c-molde">Status</span>
+                    <span class="c-problemas">Sintomas/Problemas</span>
+                    <span class="c-acoes">Ações Aplicadas</span>
+                    <span class="c-data">Movimentação</span>
+                </div>
+                
+                <ul class="lista-historico">
+                    {% for os in solicitacoes %}
+                    <li class="item-historico"
+                        data-id="{{ os.id }}"
+                        data-molde="{{ os.molde.molde_nome }}"
+                        data-in="{{ os.item.cod_complementar|default:'N/A' }}"
+                        data-maquina="{{ os.maquina.maquina }}"
+                        data-ultima-contagem="{{ os.ultima_contagem }}"
+                        data-ciclos-atuais="{{ os.ciclo_momento }}"
+                        data-operador="{{ os.operador.nome }}"
+                        data-OM="{{ os.ordem_manutencao }}"
+                        data-motivo="{{ os.motivo_manutencao|default:'' }}"
+                        data-previsao="{{ os.previsao_retorno|date:'Y-m-d'|default:'' }}"
+                        data-status="{{ os.status }}"
+                        data-abertura="{{ os.data_abertura|date:'d/m/Y H:i' }}"
+                        data-fechamento="{{ os.data_fechamento|date:'d/m/Y H:i'|default:'Em andamento' }}"
+                        data-parecer-prod="{{ os.parecer_producao|default:'Nenhum parecer informado.' }}"
+                        data-parecer-ferr="{{ os.parecer_ferramentaria|default:'Nenhuma observação técnica registrada.' }}"
+                        data-problemas="{% for p in os.problemas.all %}{{ p.problema }}{% if not forloop.last %}, {% endif %}{% empty %}Relato Técnico{% endfor %}"
+                        data-acoes="{% for sa in os.solicitacaoacao_set.all %}{{ sa.acao.acao }}{% if not forloop.last %}, {% endif %}{% empty %}---{% endfor %}"
+                        data-ferramenteiro="{{ os.responsavel.nome|default:'Não designado' }}"
+                        data-ferramenteiro-id="{{ os.responsavel.id|default:'' }}"
+                        data-acoes-ids="{% for sa in os.solicitacaoacao_set.all %}{{ sa.acao.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                        onclick="verDetalhesFicha(this)">
+                        
+                        <span class="c-molde">
+                            {% if os.status == 'Concluído' %}<span class="status-tag st-concluido">CON</span>
+                            {% elif os.status == 'Em Manutenção' %}<span class="status-tag st-manutencao">MAN</span>
+                            {% else %}<span class="status-tag st-aberto">PEN</span>{% endif %}
+                        </span>
+
+                        <span class="c-problemas">{% for p in os.problemas.all %}{{ p.problema }}{% if not forloop.last %}, {% endif %}{% empty %}Relato Técnico{% endfor %}</span>
+                        
+                        <span class="c-acoes">
+                            {% for sa in os.solicitacaoacao_set.all %}{{ sa.acao.acao }}{% if not forloop.last %}, {% endif %}{% empty %}---{% endfor %}
+                        </span>
+                        
+                        <span class="c-data">{% if os.status == 'Concluído' %}{{ os.data_fechamento|date:"d/m/y H:i" }}{% else %}{{ os.data_abertura|date:"d/m/y H:i" }}{% endif %}</span>
+                    </li>
+                    {% empty %}
+                    <li style="text-align: center; padding: 25px; color: #6c757d; font-style: italic; list-style: none; background: #f8f9fa; border-radius: 6px;">
+                        Nenhuma ordem de serviço registrada para este molde.
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+                        <div id="dados-dashboard-json" 
+                data-defeitos-labels='{{ labels_defeitos_json|safe }}' 
+                data-defeitos-valores='{{ valores_defeitos_json|safe }}' 
+                style="display:none;">
+            </div>
+
+            <div class="dash-row-2">
+                <div class="dash-card"><h4 class="dash-card-title">⏱️ MTTR</h4><div class="chart-wrapper"><canvas id="chartMTTR_Manutencao"></canvas></div></div>
+                <div class="dash-card"><h4 class="dash-card-title">⏳ Resolução</h4><div class="chart-wrapper"><canvas id="chartTempoResolucao"></canvas></div></div>
+                <div class="dash-card"><h4 class="dash-card-title">📉 Defeitos</h4><div class="chart-wrapper"><canvas id="chartDefeitosMolde"></canvas></div></div>
+                <div class="dash-card"><h4 class="dash-card-title">🔄 Rosca Problemas</h4><div class="chart-wrapper"><canvas id="chartProblemasRosca"></canvas></div></div>
+            </div>
+
+        <div id="tab-cadastro" class="molde-tab-content">
+            <h2 class="tab-title">📋 Dados Cadastrais</h2>
+            <p style="color: #6c757d; font-style: italic;">Informações cadastrais estruturais da ficha do molde.</p>
+        </div>
+
+    </main>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof Chart !== "undefined") {
+            if (typeof Chart !== "undefined") {
+            // Obtém os dados que o seu Django está enviando
+            const containerDados = document.getElementById('dados-dashboard-json');
+            if (!containerDados) return;
+
+            const labels = JSON.parse(containerDados.getAttribute('data-defeitos-labels') || '[]');
+            const valores = JSON.parse(containerDados.getAttribute('data-defeitos-valores') || '[]');
+
+            // --- GRÁFICO 2 DA MANUTENÇÃO: TEMPO MÉDIO DE RESOLUÇÃO ---
+            const ctxResolucao = document.getElementById('chartTempoResolucao');
+            if (ctxResolucao) {
+                new Chart(ctxResolucao.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: ['OS-3', 'OS-2', 'OS-1', 'Média Geral'],
+                        datasets: [{
+                            label: 'Horas Totais',
+                            data: [14, 26, 8, 16],
+                            borderColor: '#2bbbad',
+                            backgroundColor: 'rgba(43, 187, 173, 0.15)',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#004B78',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, title: { display: true, text: 'Horas (h)' } } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // --- GRÁFICO 3 DA VISÃO GERAL: PRINCIPAIS DEFEITOS/PROBLEMAS ---
+            const ctxBarras = document.getElementById('chartDefeitosMolde').getContext('2d');
+            new Chart(ctxBarras, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ocorrências',
+                        data: valores,
+                        backgroundColor: '#004B78'
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                    plugins: { title: { display: true, text: 'Principais Defeitos Deste Molde' } }
+                }
+            });
+
+            // 1. GRÁFICO: INCIDÊNCIA DE PROBLEMAS (ROSCA)
+            const ctxRosca = document.getElementById('chartProblemasRosca').getContext('2d');
+            new Chart(ctxRosca, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: valores,
+                        backgroundColor: ['#004B78', '#dc3545', '#f0ad4e', '#28a745'] // Cores padrão
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: 'Incidência de Problemas' } }
+                }
+            });
+
+            // --- GRÁFICO DE MTTR REPLICADO EXCLUSIVO DA MANUTENÇÃO ---
+            const ctxMttrManutencao = document.getElementById('chartMTTR_Manutencao');
+            if (ctxMttrManutencao) {
+                const labelsMttr = JSON.parse('{{ labels_mttr|safe|default:"[]" }}');
+                const valoresMttr = JSON.parse('{{ valores_mttr|safe|default:"[]" }}');
+                new Chart(ctxMttrManutencao.getContext('2d'), {
+                    type: 'line',
+                    data: { labels: labelsMttr, datasets: [{ label: 'Média de Horas', data: valoresMttr, borderColor: '#9c8481', backgroundColor: 'rgba(156, 132, 129, 0.1)', borderWidth: 3, pointBackgroundColor: '#004B78', fill: true, tension: 0.3 }] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+                });
+            }
+        }
+    }
+});
+</script>

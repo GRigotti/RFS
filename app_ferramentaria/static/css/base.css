@@ -1,0 +1,334 @@
+
+        /* Reset básico e fontes */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            background-color: #ffffff; 
+            overflow-y: scroll;
+        }
+
+        /* Cabeçalho Superior Principal */
+        .header {
+            background-color: #004B78; /* Azul escuro da Soprano */
+            color: white;
+            padding: 15px 25px;
+            font-size: 26px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            letter-spacing: 1px;
+        }
+
+        /* ==========================================================================
+           BARRA DE NAVEGAÇÃO POR ABAS HORIZONTAIS (ESTILO NAVBAR SUPERIOR)
+           ========================================================================== */
+        .nav-tabs-container {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff; 
+            padding: 0 20px;
+            height: 50px;
+            border-bottom: 2px solid #e2e8f0; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .nav-tab-link {
+            color: #004B78;
+            text-decoration: none;
+            padding: 0 20px; /* Ajustado para alinhar perfeitamente a barra azul */
+            font-size: 20px; /* Tamanho levemente ajustado para o menu superior */
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 3px solid transparent; 
+            transition: all 0.2s ease;
+            height: 100%; /* Garante que o link preencha a barra toda e a borda cole embaixo */
+            box-sizing: border-box; /* Impede que a borda empurre o menu */
+            
+            /* Resets caso o link seja um <button> (como no Sair) */
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        /* Efeito de passar o mouse por cima (Hover) */
+        .nav-tab-link:hover {
+            background-color: #f8f9fa;
+            color: #004B78;
+            border-bottom: 3px solid #004B78;
+        }
+
+        /* Empurra o formulário de logout para o final da direita */
+        .logout-form {
+            margin-left: auto;
+            height: 100%;
+            display: flex;
+        }
+        /* Estilo para destacar visualmente a página em que o usuário está */
+        .nav-tab-link.active-page {
+            color: #004B78;
+            border-bottom: 3px solid #004B78;
+            background-color: rgba(0, 75, 120, 0.05);
+        }
+
+        /* Área de Conteúdo Principal */
+        .content-area {
+            padding: 25px;
+            flex: 1;
+            overflow-y: auto;
+            
+        }
+
+
+        /* =========================================
+       RESPONSIVIDADE INTERNA (MONITORES MENORES)
+       ========================================= */
+        @media (max-width: 1366px) {
+            .card-grafico, .card-itens {
+                height: auto;
+                max-height: none;
+            }
+
+            body {
+            zoom: 80%; 
+            } 
+            /* Ajuste opcional: Garante que os modais continuem centralizados ao usar o zoom */
+            .modal-overlay {
+                zoom: 1.25; /* Compensa o zoom do body para que a tela preta de fundo ocupe 100% da tela real */
+            }
+            .modal-content {
+                zoom: 100%; /* Aplica o encolhimento na caixinha branca do modal */
+            }  
+        }
+
+        @media (max-width: 1280px) {
+            .dash-inner-split {
+                flex-direction: column; /* Faz os itens e o gráfico empilharem verticalmente APENAS dentro da esquerda */
+            }
+
+            .card-grafico, .card-itens {
+                height: auto;
+                max-height: none;
+            }
+        }
+
+
+        /* ==========================================================================
+           2. 📱 RESPONSIVIDADE PARA CELULARES (ATÉ 768PX)
+           ========================================================================== */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column !important; /* Empilha: Logo em cima, Título embaixo */
+                padding: 10px !important;
+                height: auto !important;
+                min-height: auto !important;
+                position: relative !important; /* Tira a trava para o conteúdo crescer */
+            }
+            
+            .titulo-crmf {
+                position: static !important; /* Remove o bloqueio absoluto no celular */
+                transform: none !important; /* Tira o alinhamento central forçado do PC */
+                font-size: 35px !important; /* Diminui a fonte do CRMF no celular */
+                margin-top: 10px !important;
+            }
+
+            .logo-container img {
+                height: 40px !important; /* Logo levemente menor no celular */
+                max-width: 100% !important;
+            }
+            
+            /* 🧭 MENU: Transforma em uma barra horizontal perfeita no rodapé */
+            .nav-tabs-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                flex-direction: row !important; /* 🟢 Garante um ao lado do outro */
+                padding: 0;
+                gap: 0;
+                border-bottom: none;
+                border-top: 2px solid #004B78;
+                z-index: 10000;
+                background-color: #ffffff;
+                height: 60px; /* Altura fixa ergonômica para o polegar */
+            }
+
+            /* Distribui os 3 links igualmente preenchendo 100% da largura horizontal */
+            .nav-tab-link, .logout-form {
+                flex: 1 !important; 
+                width: 100% !important; /* Força o preenchimento */
+                display: flex !important; /* Garante que o form se comporte como um bloco flexível */
+                justify-content: center;
+                align-items: center;
+                padding: 0 !important; /* Zera o padding do form para não dar problema */
+                margin: 0 !important;
+            }
+
+            /* Estilo específico para os links e para o botão DENTRO do form */
+            a.nav-tab-link, .logout-form button.nav-tab-link {
+                width: 100% !important;
+                height: 100% !important; /* Faz o botão preencher todo o espaço do form */
+                padding: 10px 2px !important;
+                font-size: 13px !important; 
+                border-bottom: none !important;
+                border-top: 3px solid transparent !important;
+                white-space: nowrap;
+                background-color: transparent; /* Garante que o fundo do botão Sair fique transparente */
+                border-radius: 0; /* Remove bordas arredondadas padrão de botões no celular */
+            }
+
+            /* Indicador visual de aba ativa adaptado para a barra horizontal inferior */
+            .nav-tab-link.active-page {
+                border-top: 3px solid #004B78 !important;
+                border-left: none !important;
+                background-color: rgba(0, 75, 120, 0.05);
+            }
+
+            /* 📐 CONTEÚDO: Margem de proteção inferior menor para a barra horizontal */
+            .content-area {
+                padding: 12px !important; /* Otimiza espaço físico útil no celular */
+                padding-bottom: 80px !important; /* Evita que o menu cubra os botões de baixo */
+            }
+
+            /* 💥 FIM DAS SOBREPOSIÇÕES: Força o empilhamento vertical completo dos painéis */
+            .dash-container {
+                flex-direction: column-reverse !important; /* 🟢 column-reverse: Joga as Pendências e Botão para o TOPO no telemóvel */
+                gap: 15px !important;
+            }
+
+            .hist-container {
+                flex-direction: column !important; /* Mantém o histórico na ordem normal */
+                gap: 15px !important;
+            }
+
+            .dash-right, .dash-left, .hist-lista, .hist-dash {
+                flex: 1 !important;
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+
+            /* Torna os formulários de filtro responsivos (Balanço Geral de OS) */
+            .content-area form {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            .content-area form div {
+                margin-left: 0 !important;
+                width: 100% !important;
+                justify-content: space-between !important;
+            }
+        }
+
+        /* ADICIONADO: ESTILOS PARA CAIXAS DE ALERTA */
+        .alert-container { 
+            position: fixed; /* Descola o aviso do fundo e faz ele flutuar */
+            left: 50%;
+            transform: translateX(-50%); /* Centraliza perfeitamente no meio da tela */
+            width: 90%; 
+            max-width: 450px;
+            z-index: 10000; /* Garante que ficará na frente de todos os gráficos */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none; /* Impede que o aviso bloqueie cliques atrás dele */
+            
+            /* Posição no PC: Abaixo do Cabeçalho + Menu (Aprox. 130px do topo) */
+            top: 130px;
+        }
+        .alert-box { 
+            padding: 15px 20px; 
+            color: white; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            font-size: 1rem;
+            text-align: center; /* Centralizado fica mais elegante flutuando */
+            box-shadow: 0 4px 15px rgba(14, 9, 9, 0.2);
+            /* Animação suave para quando o JavaScript mandar sumir */
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        .alert-box.error { background-color: #dc3545; }   /* Vermelho para Erros */
+        .alert-box.success { background-color: #28a745; } /* Verde para Sucesso */
+
+        @media (max-width: 768px) {
+            .alert-container {
+                /* No celular o menu está embaixo, então a notificação desce só o espaço do Cabeçalho */
+                top: 80px;
+            }
+        }
+    
+        /* =========================================
+   CUSTOMIZAÇÃO GLOBAL DO SELECT2 (TEMA MODERNO)
+   ========================================= */
+
+    /* 1. Define a altura exata da caixa e alinha o texto ao centro */
+    .select2-container .select2-selection--single {
+        height: 42px !important;
+        padding: 6px !important;
+        border: 1px solid #ccc !important;
+        border-radius: 4px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    /* 2. Força fundo branco e letra preta na lista suspensa (Evita texto invisível) */
+    .select2-container--default .select2-results__option {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+
+    /* 3. Cor de fundo quando passa o mouse (Azul Soprano) */
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #004B78 !important;
+        color: #ffffff !important;
+    }
+
+    /* 4. Cor e estilo do texto selecionado na caixinha */
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #000000 !important;
+        font-weight: bold;
+        line-height: normal !important;
+        padding-left: 8px !important;
+    }
+
+    /* 5. Estilização da barra de pesquisa interna (Lupa) */
+    .select2-container--default .select2-search--dropdown {
+        display: block !important;
+        padding: 10px !important;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        display: block !important;
+        height: 35px !important;
+        padding: 5px 10px !important;
+        border: 1px solid #004B78 !important;
+        border-radius: 4px !important;
+        outline: none !important;
+    }
+        
+/* ==========================================================================
+   SMART HEADER (CABEÇALHO INTELIGENTE GLOBAL)
+   ========================================================================== */
+    .menu-smart {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 9999 !important; /* Mantém o menu acima de todos os gráficos */
+        transition: transform 0.3s ease-in-out !important;
+        transform: translateY(0);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Sombra elegante */
+    }
+
+    /* Classe que o JavaScript usa para puxar o menu para fora da tela */
+    .menu-hide {
+        transform: translateY(-100%) !important;
+    }

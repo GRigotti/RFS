@@ -1,0 +1,167 @@
+
+
+    /* Layout de Grade Responsiva */
+    .hist-container { 
+        display: flex; 
+        gap: 20px; 
+        width: 100%; 
+        align-items: stretch; 
+        margin-top: 20px; 
+        box-sizing: border-box;
+    }/* Dashboards posicionados na Esquerda ocupando 60% (Peso 6 de 10) */
+    .hist-dash { 
+        flex: 5 !important; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 20px; 
+        min-width: 0; 
+    }
+    
+
+    /* Tabela de Histórico posicionada na Direita ocupando 40% (Peso 4 de 10) */
+    .hist-lista { 
+        flex: 5 !important; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 15px; 
+        min-width: 320px; 
+    }
+
+    /* Força os Gráficos a ocuparem 100% da tela quando "Todos" for selecionado */
+    .hist-full { 
+        flex: 100% !important; 
+        width: 100% !important; 
+    }
+    .hist-left { flex: 6.5; display: flex; flex-direction: column; gap: 15px; min-width: 0; }
+    .hist-right { flex: 3.5; display: flex; flex-direction: column; gap: 20px; min-width: 320px; }
+
+    /* Caixa Marrom de Registros */
+    .historico-box {
+        background-color: #ffffff;
+        border-radius: 8px;
+        padding: 20px;
+        color: #000000;
+        box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+    }
+    .historico-box h3 { font-size: 1.3rem; margin-bottom: 15px; color: rgb(0, 0, 0); text-align: left; font-weight: bold; }
+    
+    /* Cabeçalho Estilo Tabela */
+    .table-header {
+        display: flex;
+        font-size: 0.85rem;
+        font-weight: bold;
+        border-bottom: 2px solid rgba(0,0,0,0.2);
+        padding-bottom: 8px;
+        margin-bottom: 10px;
+        color: #2b1d1c;
+    }
+    .lista-historico { list-style: none;
+            padding: 0;
+            margin: 0;
+            
+            /* NOVO: Limita a altura a aproximadamente 15 linhas e ativa a rolagem */
+            max-height: 650px; /* Cada linha tem cerca de 42px. 15 x 42 = ~630px */
+            overflow-y: auto;
+            
+            /* EXTRA: Lembra da trava de layout? Evita que a barra de rolagem desalinhe as colunas! */
+            scrollbar-gutter: stable;}
+    
+    /* Linha de Registro Clicável */
+    .item-historico {
+        display: flex;
+        align-items: center;
+        padding: 12px 5px;
+        border-bottom: 1px solid rgb(0, 0, 0);
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 0.9rem;
+    }
+    .item-historico:hover { background-color: rgba(26, 60, 94, 0.2); }
+
+    /* Divisão Rígida de Colunas */
+    .c-molde { flex: 0 0 15%; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .c-problemas { flex: 0 0 35%; padding-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .c-acoes { flex: 0 0 35%; padding-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; }
+    .c-data { flex: 0 0 15%; text-align: right; white-space: nowrap; font-weight: 500; }
+
+    /* Estilo dos Cards de Gráficos */
+    .card-chart {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        min-height: 280px;
+        display: flex;
+        flex-direction: column;
+    }
+    .card-chart h4 { border-bottom: 2px solid #f4eaeb; padding-bottom: 8px; margin-bottom: 15px; color: #004B78; font-size: 1.1rem; font-weight: bold; text-align: left; }
+    .chart-wrapper { position: relative; width: 100%; flex: 1; min-height: 200px; }
+
+    /* Badges de Status do Histórico */
+    .status-tag { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; color: white; margin-right: 5px; }
+    .st-concluido { background-color: #28a745; }
+    .st-manutencao { background-color: #004B78; }
+    .st-aberto { background-color: #d9534f; }
+
+    /* ==========================================================================
+       🟢 ADICIONADO: ESTILOS DO MODAL FLUTUANTE (FIX PROTECTION)
+       ========================================================================== */
+    .modal-overlay {
+        display: none; /* 👈 CRÍTICO: Esconde a ficha por padrão */
+        position: fixed; 
+        top: 0; left: 0; 
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.6); /* Cria o fundo escurecido atrás */
+        z-index: 2000; /* Força ficar na frente de qualquer gráfico */
+        justify-content: center;
+        align-items: center;
+        box-sizing: border-box;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        width: 550px;
+        max-width: 90%;
+        position: relative;
+        max-height: 85vh; /* Evita que a ficha saia do monitor */
+        overflow-y: auto; /* Cria rolagem interna se o parecer for muito longo */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        box-sizing: border-box;
+    }
+
+    .modal-close { 
+        position: absolute; 
+        top: 10px; right: 15px; 
+        font-size: 1.5rem; 
+        cursor: pointer; 
+        color: #aaa; 
+    }
+    .modal-close:hover { color: #004B78; }
+    
+    /* Formatação dos labels e caixas de texto internas da ficha */
+    .modal-content .form-group { 
+        margin-bottom: 15px; 
+        text-align: left; 
+    }
+    .modal-content .form-group label { 
+        display: block; 
+        margin-bottom: 5px; 
+        font-weight: bold; 
+        color: #004B78; 
+        font-size: 0.9rem;
+    }
+    .modal-content .form-group textarea { 
+        width: 100%; 
+        padding: 8px; 
+        border: 1px solid #ccc; 
+        border-radius: 4px; 
+        box-sizing: border-box; 
+        resize: none; 
+        font-family: inherit;
+    }
+
+    .acao-opaca {
+        opacity: 0.6;
+    }

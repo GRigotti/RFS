@@ -1,0 +1,12 @@
+<div id="modal-acao" class="modal-overlay" onclick="fecharModalOuter(event)">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharModal('modal-acao')">&times;</span>
+            <h3 id="titulo-modal-acao">Nova Ação Técnica</h3>
+            <form action="{% url 'ferramentaria:salvar_acao' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="id" id="acao-id">
+                <label>Descrição da Ação:</label><input type="text" name="acao" id="acao-descricao" required><br><br>
+                <button type="submit" class="btn-general btn-submit">Salvar</button>
+            </form>
+        </div>
+    </div>

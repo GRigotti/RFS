@@ -87,6 +87,7 @@ def historico_view(request):
         'labels_defeitos_gerais': json.dumps(labels_defeitos_gerais), 'valores_defeitos_gerais': json.dumps(valores_defeitos_gerais),
         'itens_molde': itens_molde, 'lista_ferramenteiros': Colaborador.objects.filter(status='Ativo', funcao__iexact='Ferramenteiro'),
         'lista_acoes_manutencao': AcaoManutencao.objects.all().order_by('acao'), 'labels_mttr': json.dumps(labels_mttr),
-        'valores_mttr': json.dumps(valores_mttr), 'pode_editar': is_ferramenteiro_ou_admin,
+        'valores_mttr': json.dumps(valores_mttr), 'pode_editar': is_ferramenteiro_ou_admin,'labels_defeitos_json': json.dumps(labels_top),    # Envia os defeitos do molde selecionado
+        'valores_defeitos_json': json.dumps(valores_top),
     }
     return render(request, 'ferramentaria/historico.html', context)
