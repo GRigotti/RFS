@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 from django.db.models.functions import ExtractMonth, ExtractYear
 
-from ..models import ItemPorMolde, Molde, Colaborador, Problema, SolicitacaoManutencao, AcaoManutencao
+from ..models import ItemPorMolde, Maquina, Molde, Colaborador, Problema, SolicitacaoManutencao, AcaoManutencao
 from ..services import SolicitacaoService
 
 @never_cache
@@ -88,6 +88,9 @@ def historico_view(request):
         'itens_molde': itens_molde, 'lista_ferramenteiros': Colaborador.objects.filter(status='Ativo', funcao__iexact='Ferramenteiro'),
         'lista_acoes_manutencao': AcaoManutencao.objects.all().order_by('acao'), 'labels_mttr': json.dumps(labels_mttr),
         'valores_mttr': json.dumps(valores_mttr), 'pode_editar': is_ferramenteiro_ou_admin,'labels_defeitos_json': json.dumps(labels_top),    # Envia os defeitos do molde selecionado
-        'valores_defeitos_json': json.dumps(valores_top),
+        'valores_defeitos_json': json.dumps(valores_top),'lista_maquinas': Maquina.objects.all(), # <--- O que faltava
+        'lista_operadores': Colaborador.objects.filter(funcao='Operador'),
+        'lista_problemas': Problema.objects.all(), # <--- O que faltava
+        'pendencias': SolicitacaoManutencao.objects.filter(status__in=['Aberto', 'Em Manutenção']).order_by('-data_abertura'),
     }
     return render(request, 'ferramentaria/historico.html', context)

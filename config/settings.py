@@ -7,7 +7,7 @@ SESSION_COOKIE_AGE = 600
 SESSION_SAVE_EVERY_REQUEST = True 
 
 # 3. Faz o logout automático se o usuário fechar o navegador no "X"
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Constrói os caminhos relativos da sua pasta (Assim funciona em qualquer computador)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -89,7 +89,18 @@ USE_I18N = True
 USE_TZ = True
 
 # Arquivos estáticos (CSS, Imagens, JavaScript)
-STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# URL para acessar os arquivos estáticos no navegador
+STATIC_URL = '/static/'
+
+# Pastas adicionais onde o Django vai buscar os arquivos antes de copiar para o STATIC_ROOT
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 # Padrão de ID do Django
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = 'ferramentaria:login'
+
+LOGIN_REDIRECT_URL = 'ferramentaria:dashboard'

@@ -64,7 +64,7 @@ def dashboard_view(request):
                     moldes_ciclo = Molde.objects.get(id=molde_id)
 
                     SolicitacaoService.abrir_solicitacao(
-                        molde_id=Molde.objects.filter(status="Ativo").order_by('molde_nome'), maquina_id=request.POST.get('maquina_id'),
+                        molde_id=molde_id, maquina_id=request.POST.get('maquina_id'),
                         operador_id=request.POST.get('operador_id'), ordem_manutencao=request.POST.get('ordem_manutencao'),
                         parecer_producao=request.POST.get('parecer_producao'), lista_problemas_ids=request.POST.getlist('problemas_ids'),
                         item_id=request.POST.get('inValor'), usuario_logado=request.user, ultima_contagem=pecas_produzidas,ciclo_momento=moldes_ciclo.ciclos
@@ -73,7 +73,11 @@ def dashboard_view(request):
             except Exception as e:
                 # Opcional: Se algo der errado no banco, exibe mensagem e cancela a operação
                 messages.error(request, f"Erro ao registrar solicitação: {str(e)}")
-            return redirect('ferramentaria:dashboard')
+            url_origem = request.POST.get('url_origem')
+            if url_origem:
+                return redirect(url_origem)
+            else:
+                return redirect('ferramentaria:dashboard')
         
         elif tipo_acao == 'registrar_manutencao':
             if not is_ferramenteiro_ou_admin:

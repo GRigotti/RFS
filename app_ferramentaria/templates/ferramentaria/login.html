@@ -18,9 +18,9 @@
             </div>
         {% endif %}
 
-        <form method="POST" action="{% url 'ferramentaria:login' %}">
+        <form method="POST" >
             {% csrf_token %}
-            <input type="hidden" name="next" value="{% url 'ferramentaria:dashboard' %}">
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
             
             <div class="login-group">
                 <label for="id_username">Usuário (Matrícula ou Login)</label>
@@ -33,11 +33,10 @@
             </div>
             
             <button type="submit" class="btn-login">🔒 Entrar</button>
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
         </form>
         
-        <div style="margin-top: 20px; font-size: 0.85rem; color: #666;">
-            Acesso exclusivo Administração.
-        </div>
+        
     </div>
 </div>
 {% endblock %}

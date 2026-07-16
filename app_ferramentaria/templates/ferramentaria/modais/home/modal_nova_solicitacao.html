@@ -4,10 +4,10 @@
         <h2>Nova Solicitação</h2>
         <hr style="margin-bottom: 15px;">
         
-        <form method="POST" action="">
+        <form method="POST" action="{% url 'ferramentaria:dashboard' %}" id="formNovaOS">
             {% csrf_token %}
             <input type="hidden" name="tipo_acao" value="nova_solicitacao">
-            
+            <input type="hidden" name="url_origem" value="{{ request.get_full_path }}">
             <div class="form-group">
                 <label>Molde</label>
                 <select name="molde_id" class="select2-modal" required>>
@@ -49,7 +49,7 @@
 
             <div class="form-group">
                 <label>Operador</label>
-                <select name="operador_id" required>
+                <select name="operador_id" class="select2-modal" required>
                     <option value="">Selecione o Colaborador...</option>
                     {% for colab in lista_operadores %}
                         <option value="{{ colab.id }}">{{ colab.nome }} - {{ colab.funcao }}</option>
@@ -93,6 +93,7 @@
             </div>
             
             <button type="submit" class="btn-submit">Salvar Solicitação</button>
+            
         </form>
     </div>
 </div>

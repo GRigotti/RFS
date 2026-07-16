@@ -8,23 +8,22 @@
     {% load static %}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/modais.css' %}">
     {% block extra_css %} {% endblock %}
-
-<!-- Adicionado alerta de mensagens flash para feedback do usuário (sucesso ou erro) -->
-{% block alert_messages %}
-{% if messages %}
-    <div class="alert-container">
-        {% for message in messages %}
-            <div class="alert-box {% if message.tags == 'error' %}error{% else %}success{% endif %}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-{% endblock alert_messages %}
-
 </head>
 <body>
+    
+    {% block alert_messages %}
+    {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+                <div class="alert-box {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endblock alert_messages %}
 
     <header class="header" style="position: relative; display: flex; align-items: center; min-height: 65px; box-sizing: border-box; width: 100%; padding: 0 20px;">
     
@@ -37,10 +36,7 @@
         </div>
 
     </header>
-
-
     
-    <!-- Alterado titulos de elementos da navegação -->
     <nav class="nav-tabs-container menu-smart">
         <a href="{% url 'ferramentaria:dashboard' %}" class="nav-tab-link" id="nav-dash">📊 Home</a>
         <a href="{% url 'ferramentaria:historico' %}" class="nav-tab-link" id="nav-hist">📜 Detalhes</a>
@@ -81,6 +77,7 @@
     {% block extra_scripts %}{% endblock %}
 
     {% block extra_js %}{% endblock %}
+    
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             // Procura todas as caixas de alerta na tela
@@ -150,7 +147,20 @@
 
         function fecharModal(idModal) {
             const modal = document.getElementById(idModal);
-            if (modal) modal.style.display = 'none';
+            if (modal) {modal.style.display = 'none';
+            // Se estiver fechando o modal de solicitação, devolve a liberdade ao campo molde
+                if (idModal === 'modalNovaOS') {
+                const campoMolde = document.getElementById('id_molde') || document.querySelector('select[name="molde"]');
+                if (campoMolde) {
+                    campoMolde.disabled = false;
+                    campoMolde.style.backgroundColor = "";
+                    campoMolde.style.cursor = "";
+                }
+                // Remove o fix oculto se houver
+                const inputOculto = document.getElementById('molde_hidden_fix');
+                if (inputOculto) inputOculto.remove();
+                }
+            }
         }
 
         // Fecha o modal se o usuário clicar na área escura (fundo)
@@ -193,7 +203,7 @@
                         lastScrollTop = currentScroll <= 0 ? 0 : currentScroll; 
                     }, { passive: true }); // O 'passive: true' melhora a performance ao rolar a tela
                 }
-            });;
+            });
     </script>
 </body>
 </html>

@@ -14,7 +14,12 @@
                     {% endfor %}
                 </select>
             </form>
-        </div>
+            <button type="button" class="menu-tab-btn"
+                style="background-color: #28a745; color: white; font-weight: bold; margin-top: 15px; margin-bottom: 0; width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; border-left: none;"
+                onclick="abrirSolicitacaoDireta('{{ molde_selecionado.id }}', event); return false;">
+                Solicitação
+            </button>
+        </div>  
         
         <nav class="sidebar-menu">
             <button class="menu-tab-btn active" onclick="switchSubTab(event, 'visao-geral')">
@@ -117,7 +122,6 @@
             <h2 class="tab-title">🔧 Histórico de Manutenção</h2>
 
             <div class="historico-box" style="margin-top: 0; margin-bottom: 30px; width: 100%;">
-                <h3 style="color: #004B78; font-size: 1.1rem; margin-bottom: 15px; font-weight: 600;">Linha do Tempo de Intervenções (Ordens de Serviço)</h3>
                 
                 <div class="table-header">
                     <span class="c-molde">Status</span>

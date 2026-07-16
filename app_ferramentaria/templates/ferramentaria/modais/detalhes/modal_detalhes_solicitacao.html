@@ -1,4 +1,4 @@
-<div class="modal-overlay" id="modalDetalhesOS" style="display: none;">
+<div class="modal-overlay" id="modalDetalhesOS">
     <div class="modal-content" style="width: 580px;">
         <span class="modal-close" onclick="fecharModal('modalDetalhesOS')">&times;</span>
         
@@ -88,14 +88,12 @@
             </div>
 
             <div class="form-group">
-                <label>Ações Técnicas Realizadas (Bancada)</label>
-                <div id="h-acoes-view" style="padding: 8px; background: #f3f9f4; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724; font-weight: bold; font-size: 0.9rem;">--</div>
-                
-                <div id="h-acoes-edit" class="grid-check-container" style="display: none;">
-                    {% for acao in lista_acoes_manutencao %}
-                        <label class="checkbox-container-label {% if not pode_editar %}acao-opaca{% endif %}">
-                            <input type="checkbox" name="acoes_realizadas_ids" value="{{ acao.id }}" {% if not pode_editar %}disabled{% endif %}>
-                            {{ acao.acao }}
+                <label>AÇÕES REALIZADAS</label>
+                <div class="grid-check-container">
+                    {% for item in lista_acoes_manutencao %}
+                        <label class="checkbox-container-label">
+                            <input type="checkbox" name="acoes_realizadas_ids" value="{{ item.id }}" {% if not pode_editar %}disabled{% endif %}>
+                        {{ item.acao }}
                         </label>
                     {% endfor %}
                 </div>
@@ -113,7 +111,7 @@
 
             <div id="h-botao-salvar-container" style="display: none; justify-content: flex-end; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px; width: 100%;">
                 {% if pode_editar %}
-                    <button type="submit" style="background-color: #004B78; color: white; border: none; padding: 10px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transition: background 0.2s;">
+                    <button type="submit" class="btn-submit">
                         Salvar Alterações
                     </button>
                 {% else %}

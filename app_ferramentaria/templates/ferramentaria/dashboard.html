@@ -228,6 +228,19 @@
 <script>
     // 1. FUNÇÃO GLOBAL (Fora do document.ready para o onclick funcionar)
     function abrirModalVisualizar(elementoClicado) {
+        var idsParaChecar = [
+        'detalhe-id', 'detalhe-molde', 'detalhe-data', 'detalhe-maquina', 
+        'detalhe-operador', 'detalhe-in', 'detalhe-om', 'detalhe-problemas', 
+        'detalhe-parecer-prod', 'detalhe-ultima-contagem', 'detalhe-ciclos-atuais',
+        'input-os-id', 'detalhe-status'
+        ];
+
+        idsParaChecar.forEach(function(id) {
+            if (!document.getElementById(id)) {
+                console.error("ERRO: O elemento com ID '" + id + "' não foi encontrado no HTML!");
+            }
+        });
+
         var id = elementoClicado.getAttribute('data-id');
         var molde = elementoClicado.getAttribute('data-molde');
         var data = elementoClicado.getAttribute('data-data');
@@ -241,6 +254,8 @@
         var previsao = elementoClicado.getAttribute('data-previsao');
         var ultimaContagem = elementoClicado.getAttribute('data-ultima-contagem');
         var ciclosAtuais = elementoClicado.getAttribute('data-ciclos-atuais');
+
+        
 
         document.getElementById('detalhe-id').innerText = id;
         document.getElementById('detalhe-molde').innerText = molde;
@@ -303,23 +318,9 @@
                 $(this).closest('form').submit();
             });
         }
-    });
-
-        /*var $modalSelects = $('select[name="molde_id"], select[name="inValor"], select[name="maquina_id"], select[name="operador_id"]');
     
-        if ($modalSelects.length) {
-            $modalSelects.select2({
-                placeholder: "Selecione uma opção...",
-                width: '100%',
-                dropdownParent: $('#modalNovaOS'),
-                sorter: function(data) {
-                    // Força a ordenação alfabética para todos os campos
-                    return data.sort(function(a, b) {
-                        return a.text.localeCompare(b.text);
-                    });
-                }
-            });
-        }*/
+
+        
        $('.select2-modal').each(function() {
             var $el = $(this);
             $el.select2({
@@ -333,6 +334,8 @@
                     });
                 }
             });
+        })
+    });
 
     $(document).on('change', 'select[name="molde_id"]', function() {
             var moldeId = $(this).val();
@@ -346,7 +349,7 @@
                     data: { 'molde_id': moldeId },
                     dataType: 'json',
                     success: function(data) {
-                        $inSelect.html('<option value="">Selecione o IN (Opcional)...</option>');
+                        $inSelect.html('<option value="">Selecione o IN...</option>');
                         data.forEach(function(item) {
                             $inSelect.append('<option value="' + item.id + '">' + item.texto + '</option>');
                         });
@@ -358,7 +361,7 @@
             } else {
                 $inSelect.html('<option value="">Selecione primeiro o Molde</option>');
             }
-        });
+        
         // Gráficos
         {% if molde_selecionado %}
             const ctx = document.getElementById('graficoProblemas').getContext('2d');

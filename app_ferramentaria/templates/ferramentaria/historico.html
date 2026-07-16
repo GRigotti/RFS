@@ -2,8 +2,25 @@
 {% load static %}
 
 {% block extra_css %}
+
+<div style="padding: 10px 20px; box-sizing: border-box; width: 100%;">
+    
+    <!-- BLOCO DE MENSAGENS (Notificações de sucesso/erro) -->
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'error' in message.tags %}
+                <div class="alert {{ message.tags }}" style="padding: 15px; margin-bottom: 20px; border-radius: 4px; background:#f8d7da; color:#721c24;">
+            {% else %}
+                <div class="alert {{ message.tags }}" style="padding: 15px; margin-bottom: 20px; border-radius: 4px; background:#d4edda; color:#155724;">
+            {% endif %}
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
     {% if molde_selecionado %}
         <link rel="stylesheet" href="{% static 'css/detalhe_molde.css' %}">
+        <link rel="stylesheet" href="{% static 'css/detalhes.css' %}">
     {% else %}
         <link rel="stylesheet" href="{% static 'css/detalhes.css' %}">
     {% endif %}
@@ -15,7 +32,7 @@
     {% if molde_selecionado %}
         
         {% include 'ferramentaria/detalhe_molde.html' %}
-
+        
     {% else %}
         
         <div style="background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: 15px;">
@@ -76,7 +93,7 @@
 </div>
 
 {% include 'ferramentaria/modais/detalhes/modal_detalhes_solicitacao.html' %}    
-
+{% include 'ferramentaria/modais/home/modal_nova_solicitacao.html' %}
 {% endblock %}
 
 
@@ -90,9 +107,33 @@
     function switchSubTab(event, tabId) {
         document.querySelectorAll('.menu-tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.molde-tab-content').forEach(content => content.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        document.getElementById('tab-' + tabId).classList.add('active');
+        
+        if (event) {
+            event.currentTarget.classList.add('active');
+        } else {
+            // Se não tiver evento (carregamento da página), encontra o botão via JS
+            const btn = document.querySelector(`button[onclick*="${tabId}"]`);
+            if (btn) btn.classList.add('active');
+        }
+        
+        const tab = document.getElementById('tab-' + tabId);
+        if (tab) tab.classList.add('active');
+
+        // Salva a preferência temporariamente no navegador
+        sessionStorage.setItem('abaAtivaMolde', tabId);
     }
+
+    // Verifica se existe uma aba salva assim que a página termina de carregar
+    document.addEventListener("DOMContentLoaded", function() {
+        // Código existente do QR Code...
+        inicializarQrCode();
+
+        // Recupera a aba e a ativa
+        const abaSalva = sessionStorage.getItem('abaAtivaMolde');
+        if (abaSalva) {
+            switchSubTab(null, abaSalva);
+        }
+    });
 
     function inicializarQrCode() {
         const qrImage = document.getElementById('qr-code-img');
@@ -121,105 +162,153 @@
     });
 
     // ==============================================================
-    // 2. SUA FUNÇÃO ORIGINAL DO MODAL DE DETALHES DA OS MANTIDA
+    // 2. FUNÇÃO ORIGINAL DO MODAL DE DETALHES DA OS (MANTIDA)
     // ==============================================================
-    function verDetalhesFicha(elemento) {
-        var idOS = elemento.getAttribute('data-id');
-        var status = elemento.getAttribute('data-status'); 
-        var motivo = elemento.getAttribute('data-motivo') || '';
-        var previsao = elemento.getAttribute('data-previsao') || '';
-        var ultimaContagem = elemento.getAttribute('data-ultima-contagem');
-        var ciclosAtuais = elemento.getAttribute('data-ciclos-atuais'); 
+   function verDetalhesFicha(elemento) {
+    console.log("Iniciando verDetalhesFicha...");
 
-        document.getElementById('h-id-input').value = idOS;
-        document.getElementById('h-id').innerText = idOS;
-        document.getElementById('h-molde').innerText = elemento.getAttribute('data-molde');
-        document.getElementById('h-in').innerText = elemento.getAttribute('data-in');
-        document.getElementById('h-maquina').innerText = elemento.getAttribute('data-maquina');
-        document.getElementById('h-operador').innerText = elemento.getAttribute('data-operador');
-        document.getElementById('h-op').innerText = elemento.getAttribute('data-OM');
-        document.getElementById('h-abertura').innerText = elemento.getAttribute('data-abertura');
-        document.getElementById('h-fechamento').innerText = elemento.getAttribute('data-fechamento');
-        document.getElementById('h-problemas').innerText = elemento.getAttribute('data-problemas');
-        document.getElementById('h-parecer-prod').value = elemento.getAttribute('data-parecer-prod');
-        document.getElementById('h-parecer-ferr').value = elemento.getAttribute('data-parecer-ferr');
-        document.getElementById('h-motivo-texto').innerText = motivo ? motivo : 'Não informado';
-        document.getElementById('h-previsao-texto').innerText = previsao ? previsao : 'Não informado';
-        document.getElementById('h-motivo-input').value = motivo;
-        document.getElementById('h-previsao-input').value = previsao;
-        document.getElementById('h-ultima-contagem').innerText = ultimaContagem;
-        document.getElementById('h-ciclos-atuais').innerText = ciclosAtuais;
-        
-        var txtLaudoFerramentaria = document.getElementById('h-parecer-ferr');
+    // 1. Extração de dados segura
+    var idOS = elemento.getAttribute('data-id');
+    var status = elemento.getAttribute('data-status');
+    var motivo = elemento.getAttribute('data-motivo') || '';
+    var previsao = elemento.getAttribute('data-previsao') || '';
+    var ultimaContagem = elemento.getAttribute('data-ultima-contagem');
+    var ciclosAtuais = elemento.getAttribute('data-ciclos-atuais');
 
-        if (status === 'Concluído') {
-            document.getElementById('h-status-view').style.display = 'block';
-            document.getElementById('h-status').innerText = 'CONCLUÍDO (Ficha Encerrada)';
-            document.getElementById('h-status-edit').style.display = 'none';
-            document.getElementById('h-ferramenteiro-view').style.display = 'block';
-            document.getElementById('h-ferramenteiro-view').innerText = elemento.getAttribute('data-ferramenteiro');
-            document.getElementById('h-ferramenteiro-edit').style.display = 'none';
-            document.getElementById('h-acoes-view').style.display = 'block';
-            document.getElementById('h-acoes-view').innerText = elemento.getAttribute('data-acoes');
-            document.getElementById('h-acoes-edit').style.display = 'none';
+    // 2. Preenchimento seguro de elementos (com verificação de existência)
+    const camposTexto = {
+        'h-id-input': 'value',
+        'h-id': 'innerText',
+        'h-molde': 'innerText',
+        'h-in': 'innerText',
+        'h-maquina': 'innerText',
+        'h-operador': 'innerText',
+        'h-op': 'innerText',
+        'h-abertura': 'innerText',
+        'h-fechamento': 'innerText',
+        'h-problemas': 'innerText',
+        'h-parecer-prod': 'value',
+        'h-parecer-ferr': 'value',
+        'h-motivo-texto': 'innerText',
+        'h-previsao-texto': 'innerText',
+        'h-motivo-input': 'value',
+        'h-previsao-input': 'value',
+        'h-ultima-contagem': 'innerText',
+        'h-ciclos-atuais': 'innerText'
+    };
 
-            if (motivo) {
-                document.getElementById('h-bloco-manutencao').style.display = 'block';
-                document.getElementById('h-manutencao-view').style.display = 'block';
-                document.getElementById('h-manutencao-edit').style.display = 'none';
-            } else {
-                document.getElementById('h-bloco-manutencao').style.display = 'none';
-            }
+    const valores = {
+        'h-id-input': idOS, 'h-id': idOS, 'h-molde': elemento.getAttribute('data-molde'),
+        'h-in': elemento.getAttribute('data-in'), 'h-maquina': elemento.getAttribute('data-maquina'),
+        'h-operador': elemento.getAttribute('data-operador'), 'h-op': elemento.getAttribute('data-OM'),
+        'h-abertura': elemento.getAttribute('data-abertura'), 'h-fechamento': elemento.getAttribute('data-fechamento'),
+        'h-problemas': elemento.getAttribute('data-problemas'), 'h-parecer-prod': elemento.getAttribute('data-parecer-prod'),
+        'h-parecer-ferr': elemento.getAttribute('data-parecer-ferr'), 'h-motivo-texto': motivo || 'Não informado',
+        'h-previsao-texto': previsao || 'Não informado', 'h-motivo-input': motivo,
+        'h-previsao-input': previsao, 'h-ultima-contagem': ultimaContagem, 'h-ciclos-atuais': ciclosAtuais
+    };
 
+    for (var id in camposTexto) {
+        var el = document.getElementById(id);
+        if (el) {
+            el[camposTexto[id]] = valores[id];
+        } else {
+            console.warn("Elemento '" + id + "' não encontrado.");
+        }
+    }
+
+    // 3. Lógica Condicional (Com proteção)
+    var txtLaudoFerramentaria = document.getElementById('h-parecer-ferr');
+    var elStatusView = document.getElementById('h-status-view');
+    var elStatus = document.getElementById('h-status');
+    var elStatusEdit = document.getElementById('h-status-edit');
+    var elFerramView = document.getElementById('h-ferramenteiro-view');
+    var elFerramEdit = document.getElementById('h-ferramenteiro-edit');
+    var elAcoesView = document.getElementById('h-acoes-view');
+    var elAcoesEdit = document.getElementById('h-acoes-edit');
+    var elBlocoManut = document.getElementById('h-bloco-manutencao');
+
+    if (status === 'Concluído') {
+        if (elStatusView) elStatusView.style.display = 'block';
+        if (elStatus) elStatus.innerText = 'CONCLUÍDO (Ficha Encerrada)';
+        if (elStatusEdit) elStatusEdit.style.display = 'none';
+        if (elFerramView) {
+            elFerramView.style.display = 'block';
+            elFerramView.innerText = elemento.getAttribute('data-ferramenteiro');
+        }
+        if (elFerramEdit) elFerramEdit.style.display = 'none';
+        if (elAcoesView) {
+            elAcoesView.style.display = 'block';
+            elAcoesView.innerText = elemento.getAttribute('data-acoes');
+        }
+        if (elAcoesEdit) elAcoesEdit.style.display = 'none';
+
+        if (elBlocoManut) {
+            elBlocoManut.style.display = motivo ? 'block' : 'none';
+            var elManutView = document.getElementById('h-manutencao-view');
+            var elManutEdit = document.getElementById('h-manutencao-edit');
+            if (elManutView) elManutView.style.display = 'block';
+            if (elManutEdit) elManutEdit.style.display = 'none';
+        }
+
+        if (txtLaudoFerramentaria) {
             txtLaudoFerramentaria.readOnly = true;
             txtLaudoFerramentaria.style.backgroundColor = '#f1f1f1';
             txtLaudoFerramentaria.style.color = '#555';
-            document.getElementById('h-botao-salvar-container').style.display = 'none';
-        } else {
-            document.getElementById('h-status-view').style.display = 'none';
-            document.getElementById('h-status-edit').style.display = 'flex';
-            var selectStatusHistorico = document.getElementById('h-status-select');
+        }
+        var btnSalvar = document.getElementById('h-botao-salvar-container');
+        if (btnSalvar) btnSalvar.style.display = 'none';
+        
+    } else {
+        // Modo Edição
+        if (elStatusView) elStatusView.style.display = 'none';
+        if (elStatusEdit) elStatusEdit.style.display = 'flex';
+        
+        var selectStatusHistorico = document.getElementById('h-status-select');
+        if (selectStatusHistorico) {
             var opcaoExisteHist = false;
-            
             for (var i = 0; i < selectStatusHistorico.options.length; i++) {
-                if (selectStatusHistorico.options[i].value === status) {
-                    opcaoExisteHist = true; break;
-                }
+                if (selectStatusHistorico.options[i].value === status) { opcaoExisteHist = true; break; }
             }
             if (!opcaoExisteHist) {
                 var novaOpcaoHist = document.createElement('option');
-                novaOpcaoHist.value = status;
-                novaOpcaoHist.text = status;
-                novaOpcaoHist.style.display = 'none';
+                novaOpcaoHist.value = status; novaOpcaoHist.text = status; novaOpcaoHist.style.display = 'none';
                 selectStatusHistorico.add(novaOpcaoHist);
             }
             selectStatusHistorico.value = status;
+        }
 
-            document.getElementById('h-ferramenteiro-view').style.display = 'none';
-            document.getElementById('h-ferramenteiro-edit').style.display = 'block';
-            document.getElementById('h-ferramenteiro-select').value = elemento.getAttribute('data-ferramenteiro-id');
-            document.getElementById('h-acoes-view').style.display = 'none';
-            document.getElementById('h-acoes-edit').style.display = 'block';
+        if (elFerramView) elFerramView.style.display = 'none';
+        if (elFerramEdit) elFerramEdit.style.display = 'block';
+        var selFerr = document.getElementById('h-ferramenteiro-select');
+        if (selFerr) selFerr.value = elemento.getAttribute('data-ferramenteiro-id');
+        
+        if (elAcoesView) elAcoesView.style.display = 'none';
+        if (elAcoesEdit) elAcoesEdit.style.display = 'block';
 
-            toggleManutencaoHistorico();
+        toggleManutencaoHistorico();
 
-            document.querySelectorAll('.chk-acao-modal-detalhes').forEach(function(chk) { chk.checked = false; });
-            var acoesIdsStr = elemento.getAttribute('data-acoes-ids');
-            if (acoesIdsStr) {
-                var arrayIds = acoesIdsStr.split(',');
-                arrayIds.forEach(function(idAcao) {
-                    var chkBox = document.getElementById('modal-chk-' + idAcao);
-                    if (chkBox) chkBox.checked = true;
-                });
-            }
+        // Checkboxes
+        document.querySelectorAll('.chk-acao-modal-detalhes').forEach(function(chk) { chk.checked = false; });
+        var acoesIdsStr = elemento.getAttribute('data-acoes-ids');
+        if (acoesIdsStr) {
+            acoesIdsStr.split(',').forEach(function(idAcao) {
+                var chkBox = document.getElementById('modal-chk-' + idAcao);
+                if (chkBox) chkBox.checked = true;
+            });
+        }
 
+        if (txtLaudoFerramentaria) {
             txtLaudoFerramentaria.readOnly = false;
             txtLaudoFerramentaria.style.backgroundColor = '#ffffff';
             txtLaudoFerramentaria.style.color = '#004B78';
-            document.getElementById('h-botao-salvar-container').style.display = 'flex';
         }
-        abrirModal('modalDetalhesOS');
+        var btnSalvar = document.getElementById('h-botao-salvar-container');
+        if (btnSalvar) btnSalvar.style.display = 'flex';
     }
+
+    abrirModal('modalDetalhesOS');
+}
 
     var campoLaudo = document.getElementById('h-parecer-ferr');
     if (campoLaudo) {
@@ -247,9 +336,10 @@
     }
 
     // ==============================================================
-    // 3. SELECT2 E INICIALIZAÇÃO DE GRÁFICOS (MANTIDO)
+    // 3. SELECT2, CARREGAMENTO DINÂMICO DE INS E GRÁFICOS
     // ==============================================================
     $(document).ready(function() {
+        // Inicializa Select2 principal da página de histórico
         var $meuSelect = $('.filtro-pesquisa');
         if ($meuSelect.length) {
             $meuSelect.select2({
@@ -258,7 +348,55 @@
                 width: '100%',
                 dropdownParent: $('body')
             });
+            $meuSelect.on('select2:select select2:unselect', function () {
+                $(this).closest('form').submit();
+            });
         }
+
+        // Inicializa Select2 específico para o Modal de Nova Solicitação
+        $('.select2-modal').each(function() {
+            var $el = $(this);
+            $el.select2({
+                placeholder: "Selecione uma opção...",
+                width: '100%',
+                dropdownParent: $el.closest('.modal-overlay'), 
+                sorter: function(data) {
+                    return data.sort(function(a, b) {
+                        return a.text.localeCompare(b.text);
+                    });
+                }
+            });
+        });
+
+        // Evento Ajax para atualizar dinamicamente o select de IN (códigos complementares) baseado no Molde selecionado
+        $(document).on('change', 'select[name="molde_id"]', function() {
+            var moldeId = $(this).val();
+            var $inSelect = $('select[name="inValor"]');
+            
+            $inSelect.html('<option value="">Carregando...</option>');
+
+            if (moldeId) {
+                $.ajax({
+                    url: '/ajax/carregar-itens/',
+                    data: { 'molde_id': moldeId },
+                    dataType: 'json',
+                    success: function(data) {
+                        $inSelect.html('<option value="">Selecione o IN (Opcional)...</option>');
+                        data.forEach(function(item) {
+                            $inSelect.append('<option value="' + item.id + '">' + item.texto + '</option>');
+                        });
+                        // Atualiza visualmente o Select2 associado ao campo de IN
+                        $inSelect.trigger('change');
+                    },
+                    error: function() {
+                        $inSelect.html('<option value="">Erro ao carregar itens</option>');
+                    }
+                });
+            } else {
+                $inSelect.html('<option value="">Selecione primeiro o Molde</option>');
+                $inSelect.trigger('change');
+            }
+        });
 
         // Garante que os gráficos não cresçam para o infinito
         Chart.defaults.maintainAspectRatio = false; 
@@ -292,10 +430,31 @@
                 options: {
                     responsive: true,
                     scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-                    plugins: { legend: { display: false } }
-                }
+                    plugins: { legend: { display: false } },
+
+                    onClick: function(event, elements) {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const nomeMoldeClicado = this.data.labels[index];
+                            const selectFiltro = document.querySelector('select[name="molde"]');
+                            
+                            if (selectFiltro) {
+                                for (let i = 0; i < selectFiltro.options.length; i++) {
+                                    if (selectFiltro.options[i].text.trim().includes(nomeMoldeClicado.trim())) {
+                                        const moldeId = selectFiltro.options[i].value;
+                                        if (moldeId) {
+                                            const urlDestino = window.location.pathname + "?molde=" + moldeId;
+                                            window.open(urlDestino, '_blank'); 
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }        
             });
-        }
+        }    
 
         var canvasDefeitosGerais = document.getElementById('chartDefeitosGerais');
         if (canvasDefeitosGerais) {
@@ -320,5 +479,56 @@
             });
         }
     });
+
+    // ==============================================================
+    // 4. FUNÇÃO BLINDADA: ABRIR NOVA SOLICITAÇÃO DIRETA PARA O MOLDE
+    // ==============================================================
+    function abrirSolicitacaoDireta(moldeId, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+        }
+
+        // 1. Limpa o formulário de solicitações anterior (reseta campos, inputs e checks)
+        const form = document.querySelector('#modalNovaOS form');
+        if (form) form.reset();
+
+        const campoMolde = document.querySelector('select[name="molde_id"]');
+
+        if (campoMolde) {
+            // 2. Define dinamicamente o molde atual da página como valor selecionado
+            campoMolde.value = moldeId;
+
+            // 3. Notifica o Select2 para renderizar a mudança de valor no modal
+            if (typeof jQuery !== 'undefined' && typeof $(campoMolde).trigger === "function") {
+                $(campoMolde).trigger('change');
+            }
+
+            // 4. Desativa o campo para edição, impedindo que o operador altere o molde no chamado
+            campoMolde.disabled = true;
+            campoMolde.style.backgroundColor = "#e9ecef"; 
+            campoMolde.style.cursor = "not-allowed";
+
+            // 5. Garante o envio do valor no formulário mesmo com campo 'disabled'
+            // (O Django descarta campos 'disabled' nativos no envio POST, o fix hidden garante o salvamento)
+            let inputOculto = document.getElementById('molde_hidden_fix');
+            if (!inputOculto) {
+                inputOculto = document.createElement('input');
+                inputOculto.type = 'hidden';
+                inputOculto.id = 'molde_hidden_fix';
+                inputOculto.name = 'molde_id'; // Coerente com o 'name' do select
+                campoMolde.parentNode.appendChild(inputOculto);
+            }
+            inputOculto.value = moldeId;
+        } else {
+            console.error("Campo 'molde_id' não encontrado no modal.");
+        }
+
+        // 6. Abre o modal de nova solicitação pelo ID correto
+        abrirModal('modalNovaOS');
+        
+        return false;
+    }
 </script>
 {% endblock %}
