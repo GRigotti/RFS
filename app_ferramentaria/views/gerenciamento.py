@@ -41,6 +41,9 @@ def salvar_molde(request):
             kwargs = {
                 'molde_nome': request.POST.get('molde_nome'),
                 'endereco_molde': request.POST.get('endereco_molde'),
+                'cavidades': request.POST.get('cavidades', 1),
+                'ciclos': request.POST.get('ciclos', 0),
+                'vida_estimada': request.POST.get('vida_estimada', 0),
                 'status': request.POST.get('status', 'Ativo'),
                 'usuario_logado': request.user
             }
@@ -155,43 +158,47 @@ def salvar_usuario(request):
     if request.method == 'POST':
         tipo_acao = request.POST.get('tipo_acao')
 
-        if tipo_acao == 'criar_usuario':
+        # 🟢 NOVA LÓGICA: Junta Criação e Edição no mesmo bloco
+        if tipo_acao == 'salvar_usuario':
+            user_id = request.POST.get('user_id') # Se vier vazio, é novo. Se tiver ID, é edição.
+            nome_completo = request.POST.get('nome_completo', '').strip()
+            matricula = request.POST.get('matricula', '').strip()
+            username = request.POST.get('username', '').strip()
+            password = request.POST.get('password', '')
+            nome_grupo = request.POST.get('grupo', '')
+            is_active = request.POST.get('is_active', 'True')
+
             try:
-                UsuarioService.adicionar(
-                    nome_completo=request.POST.get('nome_completo', '').strip(),
-                    username=request.POST.get('username', '').strip(),
-                    password=request.POST.get('password', ''),
-                    nome_grupo=request.POST.get('grupo', ''),
-                    usuario_logado=request.user
-                )
-                messages.success(request, f'✅ Usuário cadastrado com sucesso!')
+                if user_id:
+                    # ✏️ Se tem ID, vai EDITAR
+                    UsuarioService.alterar(
+                        user_id=user_id,
+                        nome_completo=nome_completo,
+                        username=username,
+                        password=password,
+                        nome_grupo=nome_grupo,
+                        matricula=matricula,
+                        is_active=is_active,
+                        usuario_logado=request.user
+                    )
+                    messages.success(request, '✅ Usuário atualizado com sucesso!')
+                else:
+                    # ✨ Se NÃO tem ID, vai CRIAR NOVO
+                    UsuarioService.adicionar(
+                        nome_completo=nome_completo,
+                        username=username,
+                        password=password,
+                        nome_grupo=nome_grupo,
+                        matricula=matricula, # Passando a variável corretamente
+                        usuario_logado=request.user
+                    )
+                    messages.success(request, '✅ Usuário cadastrado com sucesso!')
+            
             except ValueError as e:
                 messages.error(request, str(e))
             except Exception as e:
                 messages.error(request, f'Erro interno: {str(e)}')
 
-        elif tipo_acao == 'alternar_status_usuario':
-            try:
-                user_id = request.POST.get('user_id')
-                UsuarioService.alternar_status(
-                    user_id=user_id,
-                    usuario_logado=request.user
-                )
-                messages.success(request, 'Status do usuário modificado!')
-            except ValueError as e:
-                messages.error(request, str(e))
-            except Exception as e:
-                messages.error(request, f'Erro interno: {str(e)}')
-
-        elif tipo_acao == 'alterar_funcao':
-            try:
-                UsuarioService.alterar_funcao(
-                    user_id=request.POST.get('user_id'),
-                    novo_nome_grupo=request.POST.get('grupo'),
-                    usuario_logado=request.user
-                )
-                messages.success(request, '✅ Função do usuário atualizada!')
-            except Exception as e:
-                messages.error(request, f'Erro ao atualizar função: {str(e)}')
+        # ... (Pode manter os "elif" para alternar_status_usuario e alterar_funcao caso precise no futuro)
 
     return redirect('/gerenciamento/?aba=aba-usuarios')

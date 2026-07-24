@@ -382,6 +382,86 @@
             });
         {% endif %}
     });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Recebe os dados do Python (Django) de forma segura
+        const labelsProblemas = {{ labels_problemas|safe }};
+        const valoresProblemas = {{ valores_problemas|safe }};
+
+        // 2. Calcula e atualiza o badge de Total de Problemas
+        const badgeTotal = document.getElementById('badge-total-problemas');
+        if (badgeTotal && valoresProblemas.length > 0) {
+            const total = valoresProblemas.reduce((acc, atual) => acc + atual, 0);
+            badgeTotal.innerText = 'Total: ' + total;
+        } else if (badgeTotal) {
+            badgeTotal.innerText = 'Total: 0';
+        }
+
+        // 3. Pega o Canvas do HTML
+        const canvasProblemas = document.getElementById('graficoProblemas');
+        
+        // 4. Se o canvas existir e houver dados, desenha o gráfico
+        if (canvasProblemas) {
+            if (labelsProblemas.length > 0) {
+                new Chart(canvasProblemas, {
+                    type: 'bar', // Você pode mudar para 'pie' (pizza) ou 'doughnut' (rosca)
+                    data: {
+                        labels: labelsProblemas,
+                        datasets: [{
+                            label: 'Quantidade de Ocorrências',
+                            data: valoresProblemas,
+                            backgroundColor: '#004B78', // Cor seguindo o estilo do seu cabeçalho
+                            borderRadius: 4 // Arredonda as pontas das barras
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false, // Mantém a altura da div
+                        plugins: {
+                            legend: { display: false } // Oculta a legenda principal
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { stepSize: 1 } // Mantém números inteiros
+                            },
+                            x: {
+                                ticks: {
+                                    font: {
+                                        size: 8 // ⬅️ Diminui o tamanho da fonte (ajuste se precisar)
+                                    },
+                                    maxRotation: 45, // ⬅️ Rotaciona os textos em até 45 graus se apertar
+                                    minRotation: 45, // Força a inclinação para padronizar
+                                    autoSkip: false, // Impede que o gráfico esconda alguns itens
+                                    callback: function(value) {
+                                        // ⬅️ Corta o texto se for maior que 15 caracteres (ex: "Problema mui...")
+                                        let label = this.getLabelForValue(value);
+                                        if (label && label.length > 8) {
+                                            return label.substr(0, 8) + '...';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        layout: {
+                            padding: {
+                                bottom: 0, // Adiciona um pequeno respiro no fundo
+                                top: 10
+                            }
+                        }
+                    }
+                });
+            } else {
+                // Se não houver dados, escreve uma mensagem no canvas
+                const ctx = canvasProblemas.getContext('2d');
+                ctx.font = "14px Arial";
+                ctx.fillStyle = "#666";
+                ctx.textAlign = "center";
+                ctx.fillText("Nenhum problema registrado para este molde.", canvasProblemas.width / 2, canvasProblemas.height / 2);
+            }
+        }
+    });
 </script>
 {% endblock %}
 

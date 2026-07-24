@@ -1,28 +1,39 @@
 <div id="modal-usuario" class="modal-overlay" onclick="fecharModalOuter(event)">
-        <div class="modal-content">
-            <span class="modal-close" onclick="fecharModal('modal-usuario')">&times;</span>
-            <h3 id="titulo-modal-usuario">Novo Acesso e Colaborador</h3>
-            <form action="{% url 'ferramentaria:salvar_usuario' %}" method="POST">
-                {% csrf_token %}
-                <input type="hidden" name="tipo_acao" value="criar_usuario">
-                
-                <label>Nome Completo (Crachá):</label>
-                <input type="text" name="nome_completo" required placeholder="Ex: João da Silva">
-                
-                <label>Nome de Usuário (Login):</label>
-                <input type="text" name="username" required placeholder="Ex: joao.silva">
-                
-                <label>Senha Inicial:</label>
-                <input type="password" name="password" required>
-                
-                <label>Cargo / Nível de Acesso:</label>
-                <select name="grupo" required>
-                    <option value="Operador">Operador </option>
-                    <option value="Ferramenteiro">Ferramenteiro </option>
-                    <option value="Admin">Administrador </option>
-                </select><br><br>
-                
-                <button type="submit" class="btn-general btn-submit">Salvar Acesso</button>
-            </form>
-        </div>
+    <div class="modal-content">
+        <span class="modal-close" onclick="fecharModal('modal-usuario')">&times;</span>
+        <h3 id="titulo-modal-usuario">Novo Acesso e Colaborador</h3>
+        <form action="{% url 'ferramentaria:salvar_usuario' %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="tipo_acao" id="usuario-acao" value="salvar_usuario">
+            <input type="hidden" name="user_id" id="usuario-id">
+            
+            <label>Nome Completo (Crachá):</label>
+            <input type="text" name="nome_completo" id="usuario-nome" required placeholder="Ex: João da Silva">
+            
+            <label>Nome de Usuário (Login):</label>
+            <input type="text" name="username" id="usuario-username" required placeholder="Ex: joao.silva">
+            
+            <label>Matrícula:</label>
+            <input type="text" name="matricula" id="usuario-matricula" placeholder="Ex: 12345">
+            
+            <label>Senha:</label>
+            <input type="password" name="password" id="usuario-password" placeholder="Preencha apenas para criar ou alterar">
+            
+            <label>Função:</label>
+            <select name="grupo" id="usuario-grupo" required>
+                <option value="Operador">Operador </option>
+                <option value="Ferramenteiro">Ferramenteiro </option>
+                <option value="Admin">Administrador </option>
+            </select>
+
+            <label>Status no Sistema:</label>
+            <select name="is_active" id="usuario-status" required>
+                <option value="True">Ativo</option>
+                <option value="False">Inativo</option>
+            </select>
+            <br><br>
+            
+            <button type="submit" class="btn-general btn-submit">Salvar Acesso</button>
+        </form>
     </div>
+</div>

@@ -7,6 +7,9 @@
                 <input type="hidden" name="id" id="molde-id">
                 <label>Nome do Molde:</label><input type="text" name="molde_nome" id="molde-nome" required class="uppercase-input">
                 <label>Endereço:</label><input type="text" name="endereco_molde" id="molde-endereco" class="uppercase-input">
+                <label>Cavidades:</label><input type="number" name="cavidades" id="molde-cavidades" min="1" value="1">
+                <label>Ciclos:</label><input type="number" name="ciclos" id="molde-ciclos" min="0" value="0">
+                <label>Vida Estimada (Ciclos):</label><input type="number" name="vida_estimada" id="molde-vida-estimada" min="0" value="0">
                 <label>Status:</label>
                 <select name="status" id="molde-status"><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select><br><br>
                 <button type="submit" class="btn-general btn-submit">Salvar</button>

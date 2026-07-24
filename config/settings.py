@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-SESSION_COOKIE_AGE = 600 
+SESSION_COOKIE_AGE = 7200
 
 # 2. Renova o tempo toda vez que o usuário clica em algo ou carrega uma página
 SESSION_SAVE_EVERY_REQUEST = True 

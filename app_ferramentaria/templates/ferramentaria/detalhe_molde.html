@@ -125,12 +125,12 @@
                 
                 <div class="table-header">
                     <span class="c-molde">Status</span>
-                    <span class="c-problemas">Sintomas/Problemas</span>
+                    <span class="c-id">ID</span> <span class="c-problemas">Sintomas/Problemas</span>
                     <span class="c-acoes">Ações Aplicadas</span>
                     <span class="c-data">Movimentação</span>
                 </div>
                 
-                <ul class="lista-historico">
+                <ul class="lista-historico" id="lista-os">
                     {% for os in solicitacoes %}
                     <li class="item-historico"
                         data-id="{{ os.id }}"
@@ -160,7 +160,9 @@
                             {% elif os.status == 'Em Manutenção' %}<span class="status-tag st-manutencao">MAN</span>
                             {% else %}<span class="status-tag st-aberto">PEN</span>{% endif %}
                         </span>
-
+                        
+                        <span class="c-id">{{ os.id }}</span>
+                        
                         <span class="c-problemas">{% for p in os.problemas.all %}{{ p.problema }}{% if not forloop.last %}, {% endif %}{% empty %}Relato Técnico{% endfor %}</span>
                         
                         <span class="c-acoes">
@@ -175,6 +177,13 @@
                     </li>
                     {% endfor %}
                 </ul>
+
+                <div id="paginacao-historico" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px; display: none;">
+                    <button id="btn-prev-pagina" onclick="mudarPaginaHistorico(-1)" style="padding: 5px 15px; border: 1px solid #ccc; background: white; border-radius: 4px; cursor: pointer; color: #004B78; font-weight: bold;">&laquo; Anterior</button>
+                    <span id="info-pagina-historico" style="font-size: 0.9rem; color: #555; font-weight: bold;">Página 1 de 1</span>
+                    <button id="btn-next-pagina" onclick="mudarPaginaHistorico(1)" style="padding: 5px 15px; border: 1px solid #ccc; background: white; border-radius: 4px; cursor: pointer; color: #004B78; font-weight: bold;">Próxima &raquo;</button>
+                </div>
+
             </div>
                         <div id="dados-dashboard-json" 
                 data-defeitos-labels='{{ labels_defeitos_json|safe }}' 
@@ -185,8 +194,8 @@
             <div class="dash-row-2">
                 <div class="dash-card"><h4 class="dash-card-title">⏱️ MTTR</h4><div class="chart-wrapper"><canvas id="chartMTTR_Manutencao"></canvas></div></div>
                 <div class="dash-card"><h4 class="dash-card-title">⏳ Resolução</h4><div class="chart-wrapper"><canvas id="chartTempoResolucao"></canvas></div></div>
-                <div class="dash-card"><h4 class="dash-card-title">📉 Defeitos</h4><div class="chart-wrapper"><canvas id="chartDefeitosMolde"></canvas></div></div>
-                <div class="dash-card"><h4 class="dash-card-title">🔄 Rosca Problemas</h4><div class="chart-wrapper"><canvas id="chartProblemasRosca"></canvas></div></div>
+                <div class="dash-card"><h4 class="dash-card-title">📉 Principais Defeitos Deste Molde</h4><div class="chart-wrapper"><canvas id="chartDefeitosMolde"></canvas></div></div>
+                <div class="dash-card"><h4 class="dash-card-title">🔄 Incidência de Problemas</h4><div class="chart-wrapper"><canvas id="chartProblemasRosca"></canvas></div></div>
             </div>
 
         <div id="tab-cadastro" class="molde-tab-content">
@@ -251,8 +260,31 @@
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-                    plugins: { title: { display: true, text: 'Principais Defeitos Deste Molde' } }
+                    layout: {
+                        padding: { bottom: 0, top: 10 }
+                    },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1 } 
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: 10 },
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: false,
+                                callback: function(value) {
+                                    let label = this.getLabelForValue(value);
+                                    if (label && label.length > 8) {
+                                        return label.substr(0, 8) + '...';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                     },
+                    plugins: { legend: { display: false } }
                 }
             });
 
@@ -270,9 +302,27 @@
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    plugins: { title: { display: true, text: 'Incidência de Problemas' } }
-                }
+                    layout: {
+                        padding: {
+                            top: 0,    // ⬅️ Remove o espaço em branco no topo
+                            bottom: 10 // Dá um pequeno respiro embaixo
+                        }
+                    },
+
+                    plugins: { legend: { 
+                            display: true,
+                            position: 'right', // ⬅️ Move a legenda para o lado, ganhando muita altura
+                            labels: {
+                                boxWidth: 12,  // Diminui o tamanho do quadradinho de cor
+                                font: {
+                                    size: 10   // Deixa a fonte da legenda menor e mais discreta }
+                                 }
+                           }
+                        }
+                    }   
+                }    
             });
+            
 
             // --- GRÁFICO DE MTTR REPLICADO EXCLUSIVO DA MANUTENÇÃO ---
             const ctxMttrManutencao = document.getElementById('chartMTTR_Manutencao');
@@ -288,4 +338,60 @@
         }
     }
 });
+
+    const itensPorPagina = 10;
+    let paginaAtual = 1;
+    let itensHistorico = [];
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const lista = document.getElementById('lista-os');
+        if (!lista) return;
+
+        // Pega todos os itens (ignorando a mensagem de "Nenhuma ordem")
+        itensHistorico = Array.from(lista.getElementsByClassName('item-historico'));
+        
+        // Se houver mais itens que o limite da página, mostra os controles
+        if (itensHistorico.length > itensPorPagina) {
+            document.getElementById('paginacao-historico').style.display = 'flex';
+        }
+
+        if (itensHistorico.length > 0) {
+            renderizarPaginaHistorico();
+        }
+    });
+
+    function renderizarPaginaHistorico() {
+        const totalPaginas = Math.ceil(itensHistorico.length / itensPorPagina);
+        
+        // Proteções para não sair dos limites
+        if (paginaAtual < 1) paginaAtual = 1;
+        if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+
+        // Esconde todos os itens primeiro
+        itensHistorico.forEach(item => item.style.display = 'none');
+
+        // Calcula quem deve aparecer e mostra apenas eles
+        const inicio = (paginaAtual - 1) * itensPorPagina;
+        const fim = inicio + itensPorPagina;
+        
+        for (let i = inicio; i < fim && i < itensHistorico.length; i++) {
+            // Nota: usamos 'flex' assumindo que as suas linhas (li) originais usam display flex para organizar as colunas
+            itensHistorico[i].style.display = 'grid'; 
+        }
+
+        // Atualiza os textos e bloqueia botões se estiver na primeira ou última página
+        if (totalPaginas > 0) {
+            document.getElementById('info-pagina-historico').innerText = `Página ${paginaAtual} de ${totalPaginas}`;
+            document.getElementById('btn-prev-pagina').disabled = paginaAtual === 1;
+            document.getElementById('btn-prev-pagina').style.opacity = paginaAtual === 1 ? '0.5' : '1';
+            
+            document.getElementById('btn-next-pagina').disabled = paginaAtual === totalPaginas;
+            document.getElementById('btn-next-pagina').style.opacity = paginaAtual === totalPaginas ? '0.5' : '1';
+        }
+    }
+
+    function mudarPaginaHistorico(direcao) {
+        paginaAtual += direcao;
+        renderizarPaginaHistorico();
+    }
 </script>

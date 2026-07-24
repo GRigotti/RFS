@@ -2,10 +2,15 @@
 {% load static %}
 
 {% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/detalhes.css' %}">
+    {% if molde_selecionado %}
+        <link rel="stylesheet" href="{% static 'css/detalhe_molde.css' %}">
+    {% endif %}
+{% endblock %}
 
+{% block content %}
 <div style="padding: 10px 20px; box-sizing: border-box; width: 100%;">
     
-    <!-- BLOCO DE MENSAGENS (Notificações de sucesso/erro) -->
     {% if messages %}
         {% for message in messages %}
             {% if 'error' in message.tags %}
@@ -18,17 +23,6 @@
         {% endfor %}
     {% endif %}
 
-    {% if molde_selecionado %}
-        <link rel="stylesheet" href="{% static 'css/detalhe_molde.css' %}">
-        <link rel="stylesheet" href="{% static 'css/detalhes.css' %}">
-    {% else %}
-        <link rel="stylesheet" href="{% static 'css/detalhes.css' %}">
-    {% endif %}
-{% endblock %}
-{% block content %}
-
-<div style="padding: 10px 20px; box-sizing: border-box; width: 100%;">
-    
     {% if molde_selecionado %}
         
         {% include 'ferramentaria/detalhe_molde.html' %}
@@ -426,12 +420,44 @@
         if (canvasTop) {
             new Chart(canvasTop.getContext('2d'), {
                 type: 'bar',
-                data: { labels: labelsTop, datasets: [{ label: 'Volume de Registros', data: valoresTop, backgroundColor: '#004B78', borderRadius: 4, hoverBackgroundColor: '#28a745' }] },
+                data: { 
+                    labels: labelsTop, 
+                    datasets: [{ 
+                        label: 'Volume de Registros', 
+                        data: valoresTop, 
+                        backgroundColor: '#004B78', 
+                        borderRadius: 4, 
+                        hoverBackgroundColor: '#28a745' 
+                    }] 
+                },
                 options: {
                     responsive: true,
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: { bottom: 0, top: 10 }
+                    },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1 } 
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: 12 },
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: false,
+                                callback: function(value) {
+                                    let label = this.getLabelForValue(value);
+                                    if (label && label.length > 8) {
+                                        return label.substr(0, 8) + '...';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
                     plugins: { legend: { display: false } },
-
                     onClick: function(event, elements) {
                         if (elements.length > 0) {
                             const index = elements[0].index;
@@ -454,14 +480,50 @@
                     }
                 }        
             });
-        }    
+        }  
 
         var canvasDefeitosGerais = document.getElementById('chartDefeitosGerais');
         if (canvasDefeitosGerais) {
             new Chart(canvasDefeitosGerais.getContext('2d'), {
                 type: 'bar',
-                data: { labels: labelsDefeitosGerais, datasets: [{ label: 'Ocorrências Globais', data: valoresDefeitosGerais, backgroundColor: '#004B78', borderRadius: 4 }] },
-                options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+                data: { 
+                    labels: labelsDefeitosGerais, 
+                    datasets: [{ 
+                        label: 'Ocorrências Globais', 
+                        data: valoresDefeitosGerais, 
+                        backgroundColor: '#004B78', 
+                        borderRadius: 4 
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: { bottom: 0, top: 10 }
+                    },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1 } 
+                        },
+                        x: {
+                            ticks: {
+                                font: { size: 10 },
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: false,
+                                callback: function(value) {
+                                    let label = this.getLabelForValue(value);
+                                    if (label && label.length > 8) {
+                                        return label.substr(0, 8) + '...';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }, 
+                    plugins: { legend: { display: false } } 
+                }
             });
         }
     });

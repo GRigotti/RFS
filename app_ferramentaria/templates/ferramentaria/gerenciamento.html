@@ -43,15 +43,18 @@
             <thead>
                 <tr>
                     <th>Login</th>
+                    <th>Matrícula</th>
                     <th>Colaborador</th>
                     <th>Função / Acesso</th>
                     <th>Status</th>
-                    <th style="text-align: center;">Ações</th>
+                    <th>Ações</th>
+                    
                 </tr>
             </thead>
-            {% for u in usuarios_sistema %}
+            <tbody>{% for u in usuarios_sistema %}
             <tr{% if not u.is_active %} style="background-color: #f8d7da;"{% endif %}>
                 <td style="font-weight: bold;">{{ u.username }}</td>
+                <td>{{ u.colaborador.matricula|default:"-" }}</td>
                 <td>
                     {% if u.colaborador %}
                         {{ u.colaborador.nome }}
@@ -60,19 +63,7 @@
                     {% endif %}
                 </td>
                 
-                <td>
-                    <form method="POST" action="{% url 'ferramentaria:salvar_usuario' %}" style="display: inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="tipo_acao" value="alterar_funcao">
-                        <input type="hidden" name="user_id" value="{{ u.id }}">
-                        
-                        <select name="grupo" onchange="this.form.submit()" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
-                            <option value="Admin" {% if u.groups.all.0.name == 'Admin' %}selected{% endif %}>Admin</option>
-                            <option value="Ferramenteiro" {% if u.groups.all.0.name == 'Ferramenteiro' %}selected{% endif %}>Ferramenteiro</option>
-                            <option value="Operador" {% if u.groups.all.0.name == 'Operador' %}selected{% endif %}>Operador</option>
-                        </select>
-                    </form>
-                </td>
+                <td>{{ u.groups.all.0.name|default:"Sem Função" }}</td>
 
                 <td>
                     {% if u.is_active %}
@@ -83,16 +74,16 @@
                 </td>
                 
                 <td style="text-align: center;">
-                    <form method="POST" action="{% url 'ferramentaria:salvar_usuario' %}" style="display: inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="tipo_acao" value="alternar_status_usuario">
-                        <input type="hidden" name="user_id" value="{{ u.id }}">
-                        {% if u.is_active %}
-                            <button type="submit" class="btn-general" style="background-color: #dc3545; color: white; border: none; cursor: pointer; padding: 5px 10px; border-radius: 4px;">🚫 Inativar</button>
-                        {% else %}
-                            <button type="submit" class="btn-general" style="background-color: #28a745; color: white; border: none; cursor: pointer; padding: 5px 10px; border-radius: 4px;">✅ Ativar</button>
-                        {% endif %}
-                    </form>
+                    <button class="btn-general btn-edit" 
+                            data-id="{{ u.id }}" 
+                            data-username="{{ u.username }}" 
+                            data-matricula="{% if u.colaborador %}{{ u.colaborador.matricula|default:'' }}{% endif %}"
+                            data-nome="{% if u.colaborador %}{{ u.colaborador.nome }}{% endif %}" 
+                            data-grupo="{{ u.groups.all.0.name|default:'' }}" 
+                            data-isactive="{{ u.is_active }}" 
+                            onclick="prepararEditarUsuario(this)">
+                        Editar
+                    </button>
                 </td>
             </tr>
             {% endfor %}
@@ -135,6 +126,9 @@
                 <tr>
                     <th>Nome do Molde</th>
                     <th>Endereço</th>
+                    <th>Cavidades</th>
+                    <th>Ciclos</th>
+                    <th>Vida Estimada</th>
                     <th>Status</th>
                     <th>Ações</th>
                 </tr>
@@ -144,9 +138,12 @@
                 <tr>
                     <td>{{ molde.molde_nome }}</td>
                     <td>{{ molde.endereco_molde|default_if_none:"" }}</td>
+                    <td>{{ molde.cavidades }}</td>
+                    <td>{{ molde.ciclos }}</td>
+                    <td>{{ molde.vida_estimada }}</td>
                     <td>{{ molde.status }}</td>
                     <td>
-                        <button class="btn-general btn-edit" data-id="{{ molde.id }}" data-nome="{{ molde.molde_nome }}" data-endereco="{{ molde.endereco_molde|default_if_none:'' }}" data-status="{{ molde.status }}" onclick="prepararEditarMolde(this)">Editar</button>
+                        <button class="btn-general btn-edit" data-id="{{ molde.id }}" data-nome="{{ molde.molde_nome }}" data-endereco="{{ molde.endereco_molde|default_if_none:'' }}" data-cavidades="{{ molde.cavidades }}" data-ciclos="{{ molde.ciclos }}" data-vida-estimada="{{ molde.vida_estimada }}" data-status="{{ molde.status }}" onclick="prepararEditarMolde(this)">Editar</button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -307,6 +304,10 @@
         document.getElementById('molde-nome').value = btn.getAttribute('data-nome');
         document.getElementById('molde-endereco').value = btn.getAttribute('data-endereco');
         document.getElementById('molde-status').value = btn.getAttribute('data-status');
+        document.getElementById('molde-cavidades').value = btn.getAttribute('data-cavidades');
+        document.getElementById('molde-ciclos').value = btn.getAttribute('data-ciclos');
+        document.getElementById('molde-vida-estimada').value = btn.getAttribute('data-vida-estimada');
+
     }
 
     function prepararEditarItemMolde(btn) {
@@ -335,6 +336,32 @@
         document.getElementById('prob-titulo').value = btn.getAttribute('data-problema');
         document.getElementById('prob-descricao').value = btn.getAttribute('data-descricao');
     }
+
+    function prepararEditarUsuario(btn) {
+        document.getElementById('modal-usuario').style.display = "flex";
+        document.getElementById('titulo-modal-usuario').innerText = "Editar Acesso e Colaborador";
+        
+        // Puxa os dados direto do botão para os inputs
+        document.getElementById('usuario-id').value = btn.getAttribute('data-id');
+        document.getElementById('usuario-username').value = btn.getAttribute('data-username');
+        document.getElementById('usuario-matricula').value = btn.getAttribute('data-matricula');
+        document.getElementById('usuario-nome').value = btn.getAttribute('data-nome');
+        
+        // A senha não é obrigatória na edição
+        document.getElementById('usuario-password').required = false; 
+        
+        // Seleciona o Grupo (Função)
+        let grupo = btn.getAttribute('data-grupo');
+        if (grupo) {
+            document.getElementById('usuario-grupo').value = grupo;
+        }
+        
+        // Seleciona o Status (Ativo/Inativo)
+        let isActive = btn.getAttribute('data-isactive');
+        let activeStr = (isActive === 'True' || isActive === 'true') ? 'True' : 'False';
+        document.getElementById('usuario-status').value = activeStr;
+    }
+
 
     
 

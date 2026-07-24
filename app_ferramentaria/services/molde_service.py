@@ -5,9 +5,13 @@ class MoldeService:
     
     @staticmethod
     @transaction.atomic
-    def adicionar(molde_nome, endereco_molde, status, usuario_logado):
+    def adicionar(molde_nome, endereco_molde, cavidades, ciclos, vida_estimada, status, usuario_logado):
         molde_nome = molde_nome.strip().upper()
         endereco_molde = endereco_molde.strip().upper() if endereco_molde else ''
+        cavidades = cavidades.strip().upper() if cavidades else ''
+        ciclos = ciclos.strip().upper() if ciclos else ''
+        vida_estimada = vida_estimada.strip().upper() if vida_estimada else ''
+        
         
         if Molde.objects.filter(molde_nome__iexact=molde_nome).exists():
             raise ValueError(f"Erro: O molde '{molde_nome}' já existe no sistema!")
@@ -15,6 +19,9 @@ class MoldeService:
         novo_molde = Molde.objects.create(
             molde_nome=molde_nome,
             endereco_molde=endereco_molde,
+            cavidades=cavidades,
+            ciclos=ciclos,
+            vida_estimada=vida_estimada,
             status=status
         )
         
@@ -26,9 +33,12 @@ class MoldeService:
 
     @staticmethod
     @transaction.atomic
-    def alterar(id_molde, molde_nome, endereco_molde, status, usuario_logado):
+    def alterar(id_molde, molde_nome, endereco_molde, cavidades, ciclos, vida_estimada, status, usuario_logado):
         molde_nome = molde_nome.strip().upper()
         endereco_molde = endereco_molde.strip().upper() if endereco_molde else ''
+        cavidades = cavidades.strip().upper() if cavidades else ''
+        ciclos = ciclos.strip().upper() if ciclos else ''
+        vida_estimada = vida_estimada.strip().upper() if vida_estimada else ''
         
         if Molde.objects.filter(molde_nome__iexact=molde_nome).exclude(id=id_molde).exists():
             raise ValueError(f"Erro: O nome '{molde_nome}' já está em uso por outro molde!")
@@ -36,6 +46,9 @@ class MoldeService:
         linhas_afetadas = Molde.objects.filter(id=id_molde).update(
             molde_nome=molde_nome,
             endereco_molde=endereco_molde,
+            cavidades=cavidades,
+            ciclos=ciclos,
+            vida_estimada=vida_estimada,
             status=status
         )
         

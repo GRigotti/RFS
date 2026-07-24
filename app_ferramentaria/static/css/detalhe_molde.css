@@ -322,7 +322,12 @@
 }
 
 .table-header {
-    display: flex;
+    display: grid !important;
+    /* Proporção: Status(80px) | ID(60px) | Sintomas(1fr - flexível) | Ações(1fr) | Data(140px) */
+    grid-template-columns: 80px 60px 1fr 1fr 140px !important; 
+    gap: 15px; /* Espaço entre as colunas */
+    align-items: center;
+    width: 100%;
     background: #f8f9fa;
     padding: 12px 15px;
     border-radius: 6px 6px 0 0;
@@ -340,10 +345,14 @@
 }
 
 .item-historico {
-    display: flex;
+    display: grid;
+    /* Proporção: Status(80px) | ID(60px) | Sintomas(1fr - flexível) | Ações(1fr) | Data(140px) */
+    grid-template-columns: 80px 60px 1fr 1fr 140px !important; 
+    gap: 15px; /* Espaço entre as colunas */
     padding: 15px;
     border-bottom: 1px solid #f1f5f9;
     align-items: center;
+    width: 100%;
     cursor: pointer;
     transition: background 0.2s;
     font-size: 0.9rem;
@@ -355,6 +364,11 @@
 }
 
 .c-molde { width: 15%; min-width: 80px; }
+.historico-box .c-id {
+    font-weight: bold;
+    color: #666;
+    text-align: left;
+}
 .c-problemas { width: 40%; padding-right: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .c-acoes { width: 30%; padding-right: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #6c757d; }
 .c-data { width: 15%; text-align: right; color: #6c757d; font-size: 0.85rem; }

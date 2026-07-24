@@ -10,8 +10,10 @@ class Molde(models.Model):
     endereco_molde = models.CharField(max_length=50, db_column='endereco_molde')
     status = models.CharField(max_length=20, db_column='status')
     cavidades = models.IntegerField(default=1, verbose_name="Número de Cavidades", help_text="Quantidade de peças geradas por cada batida do molde." )
-    ciclos = models.IntegerField(default=0, verbose_name="Contagem de Ciclos (Batidas)", help_text="Total acumulado de batidas deste molde.")
-
+    ciclos = models.IntegerField(default=0, verbose_name="Ciclos do Molde", help_text="Número de ciclos que o molde já foi utilizado na produção.")
+    vida_estimada = models.IntegerField(default=None, null=True, blank=True)
+   
+    
     class Meta:
         managed = False # Informa ao Django: "Não crie esta tabela, ela já existe"
         db_table = 'moldes' # Nome exato da tabela no SQLite
@@ -42,16 +44,11 @@ class Maquina(models.Model):
         db_table = 'maquinas'
 
 class Colaborador(models.Model):
-    usuario = models.OneToOneField(
-        User, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='colaborador' # Permite fazer a busca inversa: request.user.colaborador
-    )
+    usuario = models.OneToOneField(User, on_delete=models.SET_NULL,  null=True, blank=True,  related_name='colaborador' ) # Permite fazer a busca inversa: request.user.colaborador
     nome = models.CharField(max_length=100, db_column='nome')
     funcao = models.CharField(max_length=50, db_column='funcao')
     status = models.CharField(max_length=20, db_column='status')
+    matricula = models.CharField(max_length=20, unique=True, null=True, blank=True)
 
     def __str__(self):
             return f"{self.nome} ({self.funcao})"
@@ -103,7 +100,7 @@ class SolicitacaoManutencao(models.Model):
 
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'solicitacoes_manutencao'
 
 # Tabelas de Ligação explícitas
